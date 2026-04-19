@@ -82,7 +82,16 @@ switch ($method) {
             if (!move_uploaded_file($_FILES['file']['tmp_name'], $dest)) {
                 jsonResponse(['error' => 'Gagal menyimpan file'], 500);
             }
-            $filepath = 'uploads/' . $filename;
+            // Build a web-accessible URL for the file
+            $baseUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http')
+                . '://' . $_SERVER['HTTP_HOST'];
+            // Determine the web root path for /cms/backend/uploads/
+            $scriptPath = str_replace('\\', '/', __DIR__);
+            $docRoot    = str_replace('\\', '/', $_SERVER['DOCUMENT_ROOT']);
+            $relDir     = ltrim(str_replace($docRoot, '', $scriptPath), '/');
+            // Go up from api/ to backend/, then into uploads/
+            $uploadsWebPath = '/' . dirname($relDir) . '/uploads/';
+            $filepath = $baseUrl . $uploadsWebPath . $filename;
         }
 
         $status = ($user['role'] === 'stakeholder') ? 'pending' : 'approved';

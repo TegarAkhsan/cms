@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Operator — CMS</title>
+<link rel="icon" href="data:,">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
@@ -89,7 +90,11 @@
 .yard-block{border-radius:10px;padding:10px 6px;text-align:center;font-size:11px;font-weight:700;color:white;cursor:pointer;}
 .yard-low{background:#065f46;}.yard-medium{background:#b45309;}.yard-high{background:#991b1b;}
 ::-webkit-scrollbar{width:6px;}::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:3px;}
+/* PAGINATION */
+.pagination{display:flex;justify-content:center;gap:6px;margin-top:16px;}
+.pagination .btn{min-width:30px;padding:5px;text-align:center;}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 <body>
 <div class="sidebar">
@@ -131,9 +136,9 @@
 
     <div class="section" id="sec-containers">
       <div class="filter-bar">
-        <input class="search-input" id="ctrSearch" placeholder="🔍 Cari kontainer..." oninput="renderContainers()">
+        <input class="search-input" id="ctrSearch" placeholder="🔍 Cari kontainer..." oninput="renderContainers(1)">
         <label>Status:</label>
-        <select id="ctrFilter" onchange="renderContainers()">
+        <select id="ctrFilter" onchange="renderContainers(1)">
           <option value="">Semua</option><option value="gate_in">Gate-In</option>
           <option value="on_vessel">Di Kapal</option><option value="discharged">Dibongkar</option>
           <option value="clearance">Clearance</option><option value="on_delivery">Pengiriman</option>
@@ -145,24 +150,40 @@
           <thead><tr><th>ID</th><th>Booking</th><th>Vessel</th><th>Komoditi</th><th>Status</th><th>Lokasi</th><th>Aksi</th></tr></thead>
           <tbody id="containerTable"></tbody>
         </table>
+        <div class="pagination" id="pg-container"></div>
       </div>
     </div>
 
     <div class="section" id="sec-documents">
       <div class="filter-bar">
-        <input class="search-input" id="docSearch" placeholder="🔍 Cari dokumen..." oninput="renderDocuments()">
+        <input class="search-input" id="docSearch" placeholder="🔍 Cari dokumen..." oninput="renderDocuments(1)">
         <label>Status:</label>
-        <select id="docFilter" onchange="renderDocuments()">
+        <select id="docFilter" onchange="renderDocuments(1)">
           <option value="">Semua</option><option value="pending">Pending</option>
           <option value="approved">Disetujui</option><option value="revision">Revisi</option>
         </select>
         <button class="btn btn-primary" onclick="openUploadDoc()">+ Upload Dokumen</button>
+      
+        <label>Hari:</label>
+        <select id="docDay" onchange="renderDocuments(1)">
+          <option value="">Semua</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option><option value="21">21</option><option value="22">22</option><option value="23">23</option><option value="24">24</option><option value="25">25</option><option value="26">26</option><option value="27">27</option><option value="28">28</option><option value="29">29</option><option value="30">30</option><option value="31">31</option>
+        </select>
+        <label>Bulan:</label>
+        <select id="docMonth" onchange="renderDocuments(1)">
+          <option value="">Semua</option><option value="1">Januari</option><option value="2">Februari</option><option value="3">Maret</option><option value="4">April</option><option value="5">Mei</option><option value="6">Juni</option><option value="7">Juli</option><option value="8">Agustus</option><option value="9">September</option><option value="10">Oktober</option><option value="11">November</option><option value="12">Desember</option>
+        </select>
+        <label>Tahun:</label>
+        <select id="docYear" onchange="renderDocuments(1)">
+          <option value="">Semua</option><option value="2024">2024</option><option value="2025">2025</option><option value="2026">2026</option>
+        </select>
+        <button class="btn btn-success" onclick="downloadDocExcel()">📥 Laporan Excel</button>
       </div>
       <div class="box">
         <table class="data-table">
           <thead><tr><th>ID</th><th>Kontainer</th><th>Tipe</th><th>Status</th><th>Tanggal</th><th>Catatan</th><th>Aksi</th></tr></thead>
           <tbody id="documentTable"></tbody>
         </table>
+        <div class="pagination" id="pg-document"></div>
       </div>
     </div>
 
@@ -236,13 +257,28 @@
   </div>
 </div>
 
-<script src="api-client.js"></script>
+
+<!-- MODAL: Preview Dokumen -->
+<div class="modal-overlay" id="modalDocPreview">
+  <div class="modal" style="width:800px; max-width:95vw;">
+    <h3>Preview Dokumen</h3>
+    <p class="sub" id="previewSub"></p>
+    <div id="previewContainer" style="width:100%; height:500px; max-height:70vh; background:rgba(0,0,0,0.5); border-radius:8px; overflow:hidden; display:flex; align-items:center; justify-content:center; margin-bottom:14px;">
+    </div>
+    <div class="modal-footer">
+       <a id="previewDownloadBtn" href="" target="_blank" class="btn btn-success">⬇️ Download File</a>
+       <button class="btn btn-ghost" onclick="closeModal('modalDocPreview')">Tutup</button>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/api-client.js"></script>
 <script>
 let currentUser, mapInstance=null, editingCtrId=null;
 
 document.addEventListener('DOMContentLoaded', async () => {
   const check = await API.check();
-  if (!check.authenticated || check.user.role !== 'operator') { window.location.href='index.html'; return; }
+  if (!check.authenticated || check.user.role !== 'operator') { window.location.href='../auth/login.html'; return; }
   currentUser = check.user;
   document.getElementById('userName').textContent = currentUser.name;
   document.getElementById('userInitial').textContent = currentUser.name[0];
@@ -253,6 +289,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   setAutoRefresh(async()=>{ await renderDashboard(); await updateBadges(); });
 });
 
+
+const ITEMS_PER_PAGE = 5;
+function buildPagination(total, page, callbackName) {
+  const pages = Math.ceil(total / ITEMS_PER_PAGE);
+  if(pages <= 1) return '';
+  let html = `<button class="btn btn-sm btn-ghost" onclick="${callbackName}(${page - 1})" ${page===1?'disabled':''}>&laquo;</button>`;
+  for(let i=1; i<=pages; i++) html += `<button class="btn btn-sm ${i===page?'btn-primary':'btn-ghost'}" onclick="${callbackName}(${i})">${i}</button>`;
+  html += `<button class="btn btn-sm btn-ghost" onclick="${callbackName}(${page + 1})" ${page===pages?'disabled':''}>&raquo;</button>`;
+  return html;
+}
 const PAGE_TITLES={dashboard:['Dashboard Operator','CMS › Dashboard'],containers:['Manajemen Kontainer','CMS › Kontainer'],documents:['Dokumen','CMS › Dokumen'],yard:['Yard Map','CMS › Yard'],tracking:['Live Tracking','CMS › Tracking']};
 
 async function showSection(name) {
@@ -298,9 +344,11 @@ async function renderDashboard() {
   }).join('') || '<div style="color:var(--gray);font-size:12px">Tidak ada data</div>';
 }
 
-async function renderContainers() {
+async function renderContainers(page = 1) {
   const data = await API.getContainers({search:document.getElementById('ctrSearch').value,status:document.getElementById('ctrFilter').value});
-  document.getElementById('containerTable').innerHTML = data.map(c=>`
+  const start = (page - 1) * ITEMS_PER_PAGE;
+  const sliced = data.slice(start, start + ITEMS_PER_PAGE);
+  document.getElementById('containerTable').innerHTML = sliced.map(c=>`
     <tr><td class="mono">${c.id}</td><td style="font-size:11px;color:var(--gray)">${c.booking_no}</td>
     <td style="font-size:11px">${c.vessel}</td>
     <td style="font-size:11px">${c.commodity}<br><span style="color:var(--gray);font-size:10px">${c.type}</span></td>
@@ -311,6 +359,7 @@ async function renderContainers() {
       <button class="btn btn-primary btn-sm" onclick="openUpdateStatus('${c.id}')">✏️</button>
     </td></tr>
   `).join('') || `<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--gray)">Tidak ada data</td></tr>`;
+  document.getElementById('pg-container').innerHTML = buildPagination(filtered.length, page, 'renderContainers');
 }
 
 async function openUpdateStatus(id) {
@@ -339,9 +388,32 @@ async function saveStatus() {
   alert('✅ Status berhasil diupdate dan sinkron ke semua dashboard!');
 }
 
-async function renderDocuments() {
-  const data = await API.getDocuments({search:document.getElementById('docSearch').value,status:document.getElementById('docFilter').value});
-  document.getElementById('documentTable').innerHTML = data.map(d=>`
+let _allDocData = [];
+async function renderDocuments(page = 1) {
+  const reqData = {
+    search: document.getElementById('docSearch')?.value || '',
+    status: document.getElementById('docFilter')?.value || '',
+  };
+  const data = await API.getDocuments(reqData);
+  
+  const day = document.getElementById('docDay')?.value || '';
+  const month = document.getElementById('docMonth')?.value || '';
+  const year = document.getElementById('docYear')?.value || '';
+  
+  const filtered = data.filter(d => {
+    if (!d.created_at) return true;
+    const date = new Date(d.created_at);
+    if (day && date.getDate() !== parseInt(day)) return false;
+    if (month && date.getMonth() + 1 !== parseInt(month)) return false;
+    if (year && date.getFullYear() !== parseInt(year)) return false;
+    return true;
+  });
+  
+  _allDocData = filtered;
+
+  const start  = (page - 1) * ITEMS_PER_PAGE;
+  const sliced = filtered.slice(start, start + ITEMS_PER_PAGE);
+  document.getElementById('documentTable').innerHTML = sliced.map(d=>`
     <tr><td class="mono">${d.id}</td>
     <td><span class="mono">${d.container_id}</span><br><span style="font-size:10px;color:var(--gray)">${d.vessel||''}</span></td>
     <td style="font-size:12px">📄 ${d.type}</td>
@@ -349,12 +421,14 @@ async function renderDocuments() {
     <td style="font-size:11px;color:var(--gray)">${formatDateTime(d.created_at)}</td>
     <td style="font-size:11px;max-width:150px">${d.notes||'-'}</td>
     <td style="white-space:nowrap">
+      ${d.filepath ? `<button class="btn btn-ghost btn-sm" onclick="openDocPreview(\'${d.filepath}\', \'${d.type}\', \'${d.id}\')">👁 Preview</button>` : ''}
       ${d.status==='pending'?`
         <button class="btn btn-success btn-sm" onclick="updateDoc('${d.id}','approved','Disetujui operator')">✅</button>
         <button class="btn btn-danger btn-sm" onclick="promptRevision('${d.id}')">❌</button>
       `:'<span style="font-size:10px;color:var(--gray)">Diproses</span>'}
     </td></tr>
-  `).join('') || `<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--gray)">Tidak ada dokumen</td></tr>`;
+  `).join('') || `<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--gray)">Tidak ada data</td></tr>`;
+  document.getElementById('pg-document').innerHTML = buildPagination(filtered.length, page, 'renderDocuments');
 }
 
 async function updateDoc(id, status, notes) {
@@ -382,7 +456,7 @@ async function saveDoc() {
   const fileInput = document.getElementById('docFile');
   if(fileInput.files[0]) formData.append('file', fileInput.files[0]);
 
-  const res = await fetch('api/documents.php', {method:'POST',credentials:'include',body:formData});
+  const res = await fetch(API.base + '/documents.php', {method:'POST',credentials:'include',body:formData});
   const data = await res.json();
   if(data.error){alert(data.error);return;}
   closeModal('modalUpload');
@@ -390,14 +464,126 @@ async function saveDoc() {
   alert('✅ Dokumen berhasil diupload!');
 }
 
-function renderYard() {
+// Yard Data Dummy Simulation
+window.yardMapState = {};
+const YARD_CAPACITY = 10;
+
+async function renderYard() {
   const blocks=['A1','A2','A3','A4','A5','A6','B1','B2','B3','B4','B5','B6','C1','C2','C3','C4','C5','C6'];
+  const res = await API.getContainers();
+  
+  // Reset states
+  blocks.forEach(b => {
+      window.yardMapState[b] = { count: 0, capacity: YARD_CAPACITY, ctrs: [] };
+  });
+
+  // Map containers into their respective blocks dynamically
+  res.forEach(c => {
+      if (c.status !== 'completed' && c.status !== 'on_delivery' && c.position_desc) {
+          const blockMatch = RegExp('Yard ([A-C][1-6])').exec(c.position_desc);
+          if (blockMatch && blockMatch[1]) {
+              const b = blockMatch[1];
+              if (window.yardMapState[b]) {
+                  window.yardMapState[b].ctrs.push(c);
+                  window.yardMapState[b].count++;
+              }
+          }
+      }
+  });
+
   document.getElementById('yardGrid').innerHTML = blocks.map(b=>{
-    const pct=Math.floor(Math.random()*100);
-    const cls=pct<50?'yard-low':pct<=80?'yard-medium':'yard-high';
-    return `<div class="yard-block ${cls}">${b}<br>${pct}%</div>`;
+    const state = window.yardMapState[b];
+    const pct = Math.round((state.count / state.capacity) * 100);
+    
+    let cls = 'yard-low'; // green by default
+    if (pct >= 75) cls = 'yard-high'; // red
+    else if (pct >= 30) cls = 'yard-medium'; // orange
+    
+    return `<div class="yard-block ${cls}" onclick="yardBlockClick('${b}')">
+        ${b}<br>
+        <span style="font-size:12px;display:block;margin:3px 0">${pct}%</span>
+        <span style="font-size:9px">${state.count} / ${state.capacity}</span>
+    </div>`;
   }).join('');
 }
+
+window.yardBlockClick = async function(blockId) {
+    const state = window.yardMapState[blockId];
+    document.getElementById('detailTitle').textContent = `Blok Yard: ${blockId}`;
+    document.getElementById('detailSub').textContent = `Kapasitas: ${state.count} / ${state.capacity} (${Math.round((state.count / state.capacity) * 100)}%)`;
+    
+    let contentHtml = '';
+
+    // 1. Current Inventory List
+    if (state.count > 0) {
+        contentHtml += `<div style="font-size:12px;font-weight:700;margin-bottom:8px;color:var(--white)">Kontainer di Blok Ini:</div>`;
+        contentHtml += `<div style="max-height:150px;overflow-y:auto;margin-bottom:16px;border:1px solid var(--border);border-radius:8px">`;
+        state.ctrs.forEach(c => {
+            contentHtml += `<div style="padding:8px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;font-size:11px">
+                <div><b>${c.id}</b> - ${c.vessel}</div>
+                <span style="color:var(--gray)">${c.type}</span>
+            </div>`;
+        });
+        contentHtml += `</div>`;
+    } else {
+        contentHtml += `<div style="color:var(--gray);font-size:12px;margin-bottom:16px">Blok ini kosong.</div>`;
+    }
+
+    // 2. Allocation Form (only if not full)
+    if (state.count < state.capacity) {
+        contentHtml += `<div style="border-top:1px dashed var(--border);padding-top:16px;">`;
+        contentHtml += `<div style="font-size:12px;font-weight:700;margin-bottom:8px;color:var(--cyan)">Tambah Alokasi Kontainer</div>`;
+        
+        const allCtrs = await API.getContainers();
+        const pendingCtrs = allCtrs.filter(c => ['booking', 'gate_in'].includes(c.status) && !c.position_desc?.includes(`Yard ${blockId}`));
+        window._pendingCtrsForYard = pendingCtrs;
+        
+        if (pendingCtrs.length > 0) {
+            contentHtml += `
+              <div style="margin-bottom:14px">
+                <select id="yardSelCtr" style="width:100%;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:8px;padding:8px;color:white;margin-bottom:10px;font-size:12px" onchange="showYardSelDetail()">
+                   <option value="">-- Pilih Kontainer Tersedia --</option>
+                   ${pendingCtrs.map(c => `<option value="${c.id}">${c.id} - ${c.vessel}</option>`).join('')}
+                </select>
+                <div id="yardSelDetail" style="padding:10px;border:1px solid var(--border);border-radius:10px;display:none;font-size:12px"></div>
+              </div>
+              <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="allocateYard('${blockId}')">Alokasikan Kesini</button>
+            `;
+        } else {
+            contentHtml += `<div style="color:var(--gray);font-size:11px">Tidak ada kontainer status booking/gate-in yang menunggu alokasi.</div>`;
+        }
+        contentHtml += `</div>`;
+    } else {
+        contentHtml += `<div style="color:var(--red);font-size:12px;font-weight:600;text-align:center;padding:10px;background:rgba(239,68,68,.1);border-radius:8px">Blok ini sudah penuh kapasitasnya.</div>`;
+    }
+
+    document.getElementById('detailContent').innerHTML = contentHtml;
+    document.getElementById('modalDetail').classList.add('open');
+};
+
+window.showYardSelDetail = function() {
+    const sel = document.getElementById('yardSelCtr').value;
+    const detailDiv = document.getElementById('yardSelDetail');
+    if(!sel) { detailDiv.style.display = 'none'; return; }
+    const c = window._pendingCtrsForYard.find(x => x.id === sel);
+    if(c) {
+        detailDiv.innerHTML = `<b>Lokasi Asal:</b> ${c.origin} &rarr; ${c.destination}<br><b>Komoditi:</b> ${c.commodity}<br><b>Saat ini:</b> ${c.position_desc || '-'}`;
+        detailDiv.style.display = 'block';
+    }
+};
+
+window.allocateYard = async function(blockId) {
+    const sel = document.getElementById('yardSelCtr').value;
+    if(!sel) { alert('Pilih kontainer terlebih dahulu'); return; }
+    
+    // Update API
+    const res = await API.updateContainer({ id: sel, position_desc: `Yard ${blockId}, Tanjung Perak`, status: 'gate_in' });
+    if(res.error) { alert(res.error); return; }
+    
+    closeModal('modalDetail');
+    await renderYard();
+    alert('✅ Kontainer ' + sel + ' berhasil dialokasikan ke Yard ' + blockId);
+};
 
 async function renderTracking() {
   const ctrs = await API.getContainers({status:'on_delivery'});
@@ -443,6 +629,60 @@ async function updateBadges() {
 
 function closeModal(id){document.getElementById(id).classList.remove('open');}
 document.querySelectorAll('.modal-overlay').forEach(m=>{m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');});});
+
+async function downloadDocExcel() {
+  if (!_allDocData || _allDocData.length === 0) {
+    alert('Tidak ada data dokumen untuk diunduh'); return;
+  }
+  
+  const day = document.getElementById('docDay')?.value || '';
+  const month = document.getElementById('docMonth')?.value || '';
+  const year  = document.getElementById('docYear')?.value || '';
+  const filterLabel = `${day?day+'-':''}${month?month+'-':''}${year||'Semua'}`;
+
+  const headers = ['ID Dokumen', 'ID Kontainer', 'Vessel', 'Tipe Dokumen', 'Status', 'Catatan', 'Tanggal Dibuat', 'Link File'];
+  const rows = _allDocData.map(d => [
+    d.id,
+    d.container_id || '',
+    d.vessel || '',
+    d.type || '',
+    d.status || '',
+    d.notes || '',
+    d.created_at ? d.created_at.split('T').join(' ').split('.')[0] : '',
+    d.filepath || ''
+  ]);
+
+  const wsData = [headers, ...rows];
+  const ws = XLSX.utils.aoa_to_sheet(wsData);
+  ws['!cols'] = [12, 16, 20, 20, 12, 25, 18, 50].map(w=>({wch:w}));
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Laporan Dokumen');
+  XLSX.writeFile(wb, `Laporan_Dokumen_CMS_${filterLabel}.xlsx`);
+}
+
+
+window.openDocPreview = function(filepath, type, id) {
+  document.getElementById('previewSub').textContent = `Dokumen: ${type} (${id})`;
+  const ext = filepath.split('.').pop().toLowerCase();
+  let html = '';
+  if (['png','jpg','jpeg','gif'].includes(ext)) {
+    html = `<img src="${filepath}" style="max-width:100%; max-height:100%; object-fit:contain;">`;
+  } else {
+    // try object for pdf for better compatibility over iframe
+    if(ext === 'pdf') {
+        html = `<object data="${filepath}" type="application/pdf" width="100%" height="100%">
+                  <iframe src="${filepath}" style="width:100%; height:100%; border:none;"></iframe>
+                </object>`;
+    } else {
+        html = `<iframe src="${filepath}" style="width:100%; height:100%; border:none;"></iframe>`;
+    }
+  }
+  document.getElementById('previewContainer').innerHTML = html;
+  document.getElementById('previewDownloadBtn').href = filepath;
+  document.getElementById('modalDocPreview').classList.add('open');
+};
+
 </script>
 </body>
 </html>

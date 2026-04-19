@@ -1,10 +1,10 @@
 // api-client.js — CMS Frontend ↔ PHP/MySQL Backend
 
 const API = {
-    base: window.location.origin + window.location.pathname.replace(/\/[^/]*$/, ''),
+    base: window.location.origin + window.location.pathname.split('/frontend/')[0] + '/backend/api',
 
     async call(endpoint, method = 'GET', data = null) {
-        const url  = `${this.base}/api/${endpoint}`;
+        const url  = `${this.base}/${endpoint}`;
         const opts = { method, credentials: 'include', headers: { 'Content-Type': 'application/json' } };
 
         if (data && method === 'GET') {
@@ -15,7 +15,7 @@ const API = {
 
         return fetch(url, opts).then(async r => {
             const json = await r.json();
-            if (r.status === 401) { window.location.href = 'index.html'; }
+            if (r.status === 401) { window.location.href = '../auth/login.html'; }
             return json;
         }).catch(() => ({ error: 'Koneksi server gagal' }));
     },
@@ -90,7 +90,7 @@ function docBadge(status) {
 }
 async function doLogout() {
     await API.logout();
-    window.location.href = 'index.html';
+    window.location.href = '../auth/login.html';
 }
 
 // Auto-refresh helper

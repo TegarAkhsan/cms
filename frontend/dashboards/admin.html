@@ -4,10 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Admin — CMS Dashboard</title>
+<link rel="icon" href="data:,">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
 :root{
   --bg:#080f1e;--bg2:#0d1729;--sidebar:#060d1a;--card:#0f1e35;
@@ -19,7 +21,6 @@
 *{margin:0;padding:0;box-sizing:border-box;}
 body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex;min-height:100vh;}
 
-/* SIDEBAR */
 .sidebar{width:240px;min-height:100vh;background:var(--sidebar);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;z-index:100;}
 .sidebar-logo{padding:24px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;}
 .sidebar-logo .icon{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--blue),var(--cyan));display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
@@ -40,19 +41,16 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
 .logout-btn{margin-left:auto;background:none;border:none;cursor:pointer;color:var(--gray);font-size:16px;}
 .logout-btn:hover{color:var(--red);}
 
-/* MAIN */
 .main{margin-left:240px;flex:1;display:flex;flex-direction:column;}
 .topbar{padding:16px 24px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
 .topbar h2{font-size:16px;font-weight:700;color:var(--white);}
 .breadcrumb{font-size:11px;color:var(--gray);}
-/* ① HAPUS notif & auto-refresh: topbar-right hanya tampilkan tanggal */
 .topbar-right{display:flex;align-items:center;gap:12px;}
 .date-display{font-size:11px;color:var(--gray);font-family:var(--mono);background:rgba(255,255,255,.04);padding:6px 12px;border-radius:8px;border:1px solid var(--border);}
 
 .content{padding:24px;flex:1;}
 .section{display:none;}.section.active{display:block;}
 
-/* STAT CARDS */
 .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:16px;margin-bottom:24px;}
 .stat-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;position:relative;overflow:hidden;transition:transform .2s;}
 .stat-card:hover{transform:translateY(-3px);}
@@ -60,14 +58,12 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
 .stat-value{font-size:32px;font-weight:700;color:var(--white);font-family:var(--mono);line-height:1;margin-bottom:8px;}
 .stat-icon{position:absolute;bottom:14px;right:16px;font-size:28px;opacity:.4;}
 
-/* LAYOUT */
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
 .grid-3{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:16px;}
 .box{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:16px;}
 .box-title{font-size:13px;font-weight:700;color:var(--white);margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;}
 .box-title span{color:var(--gray);font-size:11px;font-weight:500;}
 
-/* TABLE */
 .data-table{width:100%;border-collapse:collapse;font-size:12px;}
 .data-table th{background:rgba(255,255,255,.04);padding:10px 12px;text-align:left;color:var(--gray);font-size:10px;text-transform:uppercase;letter-spacing:.8px;border-bottom:1px solid var(--border);}
 .data-table td{padding:11px 12px;border-bottom:1px solid rgba(255,255,255,.03);color:var(--text);vertical-align:middle;}
@@ -75,7 +71,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
 .mono{font-family:var(--mono);font-size:11px;color:var(--cyan);}
 .badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:600;white-space:nowrap;}
 
-/* BUTTONS */
 .btn{padding:8px 16px;border-radius:10px;border:none;cursor:pointer;font-family:var(--font);font-size:12px;font-weight:600;transition:all .2s;display:inline-flex;align-items:center;gap:6px;}
 .btn-primary{background:var(--blue);color:white;}.btn-primary:hover{background:#2563eb;}
 .btn-success{background:var(--green);color:white;}
@@ -85,7 +80,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
 .btn-ghost{background:rgba(255,255,255,.06);color:var(--light);border:1px solid var(--border);}
 .btn-ghost:hover{background:rgba(255,255,255,.1);}
 
-/* FILTER BAR */
 .filter-bar{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 18px;margin-bottom:16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;}
 .filter-bar label{font-size:11px;color:var(--gray);font-weight:600;}
 .filter-bar select{background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:8px;padding:7px 10px;color:var(--white);font-family:var(--font);font-size:12px;outline:none;}
@@ -94,7 +88,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
 .search-input::placeholder{color:var(--gray);}
 .search-input:focus,.filter-bar select:focus{border-color:var(--cyan);}
 
-/* MODAL */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:999;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
 .modal-overlay.open{display:flex;}
 .modal{background:var(--bg2);border:1px solid var(--border);border-radius:20px;width:620px;max-width:95vw;max-height:90vh;overflow-y:auto;padding:28px;}
@@ -109,16 +102,13 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
 .form-group select option{background:var(--bg2);}
 .form-group textarea{resize:vertical;min-height:80px;}
 
-/* ② Style khusus input ID auto-generate */
 .input-autofill{background:rgba(0,212,255,.06)!important;border-color:rgba(0,212,255,.3)!important;color:var(--cyan)!important;font-family:var(--mono)!important;cursor:default;}
 .auto-hint{font-size:10px;color:var(--cyan);margin-top:4px;font-family:var(--mono);}
 
-/* NOTIF */
 .notif-item{display:flex;gap:12px;padding:12px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px;margin-bottom:8px;cursor:pointer;}
 .notif-item.unread{border-color:rgba(0,212,255,.2);background:rgba(0,212,255,.04);}
 .notif-dot{width:8px;height:8px;border-radius:50%;margin-top:4px;flex-shrink:0;}
 
-/* TIMELINE */
 .timeline{position:relative;padding-left:20px;}
 .timeline::before{content:'';position:absolute;left:6px;top:6px;bottom:6px;width:2px;background:var(--border);}
 .tl-item{position:relative;padding:0 0 18px 20px;}
@@ -128,23 +118,21 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
 .tl-event{font-size:12px;font-weight:600;color:var(--white);}
 .tl-meta{font-size:10px;color:var(--gray);margin-top:2px;}
 
-/* MAP */
 #adminMap{height:340px;border-radius:12px;}
 .map-legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;}
 .map-legend-item{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--gray);}
 .map-legend-dot{width:10px;height:10px;border-radius:50%;}
 
-/* ③ Animasi marker pindah */
 @keyframes markerPulse{0%,100%{transform:scale(1);}50%{transform:scale(1.15);}}
 .marker-updated{animation:markerPulse .6s ease 3;}
 
 .progress-wrap{background:rgba(255,255,255,.08);border-radius:20px;height:6px;overflow:hidden;}
 .progress-fill{height:100%;border-radius:20px;transition:width .5s ease;}
-::-webkit-scrollbar{width:6px;}::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:3px;}
 
-/* TOAST */
-.toast{position:fixed;bottom:24px;right:24px;z-index:9999;background:#1e293b;border-radius:12px;padding:14px 20px;color:var(--white);font-size:13px;box-shadow:0 8px 32px rgba(0,0,0,.4);animation:slideUp .3s ease;display:flex;align-items:center;gap:10px;}
-@keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+.pagination{display:flex;justify-content:center;gap:6px;margin-top:16px;flex-wrap:wrap;}
+.pagination .btn{min-width:32px;padding:5px;text-align:center;}
+
+::-webkit-scrollbar{width:6px;}::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:3px;}
 </style>
 </head>
 <body>
@@ -177,7 +165,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
 
 <!-- MAIN -->
 <div class="main">
-  <!-- ① TOPBAR: hapus notif & auto-refresh, hanya tampilkan judul + tanggal -->
   <div class="topbar">
     <div>
       <h2 id="pageTitle">Dashboard Admin</h2>
@@ -208,9 +195,9 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
     <!-- CONTAINERS -->
     <div class="section" id="sec-containers">
       <div class="filter-bar">
-        <input class="search-input" id="ctrSearch" placeholder="🔍 Cari ID, vessel, komoditi..." oninput="renderContainers()">
+        <input class="search-input" id="ctrSearch" placeholder="🔍 Cari ID, vessel, komoditi..." oninput="renderContainers(1)">
         <label>Status:</label>
-        <select id="ctrFilter" onchange="renderContainers()">
+        <select id="ctrFilter" onchange="renderContainers(1)">
           <option value="">Semua Status</option>
           <option value="booking">Booking</option>
           <option value="gate_in">Gate-In Terminal</option>
@@ -220,33 +207,48 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
           <option value="on_delivery">Dalam Pengiriman</option>
           <option value="completed">Selesai</option>
         </select>
-        <button class="btn btn-primary" onclick="openAddContainer()">+ Tambah Kontainer</button>
       </div>
       <div class="box">
         <table class="data-table">
           <thead><tr><th>ID</th><th>Booking</th><th>Vessel</th><th>Rute</th><th>Komoditi</th><th>Status</th><th>Lokasi</th><th>Aksi</th></tr></thead>
           <tbody id="containerTable"></tbody>
         </table>
+        <div class="pagination" id="pg-container"></div>
       </div>
     </div>
 
     <!-- DOCUMENTS -->
     <div class="section" id="sec-documents">
       <div class="filter-bar">
-        <input class="search-input" id="docSearch" placeholder="🔍 Cari dokumen..." oninput="renderDocuments()">
+        <input class="search-input" id="docSearch" placeholder="🔍 Cari dokumen..." oninput="renderDocuments(1)">
         <label>Status:</label>
-        <select id="docFilter" onchange="renderDocuments()">
+        <select id="docFilter" onchange="renderDocuments(1)">
           <option value="">Semua</option>
           <option value="pending">Pending</option>
           <option value="approved">Disetujui</option>
           <option value="revision">Revisi</option>
         </select>
+      
+        <label>Hari:</label>
+        <select id="docDay" onchange="renderDocuments(1)">
+          <option value="">Semua</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option><option value="21">21</option><option value="22">22</option><option value="23">23</option><option value="24">24</option><option value="25">25</option><option value="26">26</option><option value="27">27</option><option value="28">28</option><option value="29">29</option><option value="30">30</option><option value="31">31</option>
+        </select>
+        <label>Bulan:</label>
+        <select id="docMonth" onchange="renderDocuments(1)">
+          <option value="">Semua</option><option value="1">Januari</option><option value="2">Februari</option><option value="3">Maret</option><option value="4">April</option><option value="5">Mei</option><option value="6">Juni</option><option value="7">Juli</option><option value="8">Agustus</option><option value="9">September</option><option value="10">Oktober</option><option value="11">November</option><option value="12">Desember</option>
+        </select>
+        <label>Tahun:</label>
+        <select id="docYear" onchange="renderDocuments(1)">
+          <option value="">Semua</option><option value="2024">2024</option><option value="2025">2025</option><option value="2026">2026</option>
+        </select>
+        <button class="btn btn-success" onclick="downloadDocExcel()">📥 Laporan Excel</button>
       </div>
       <div class="box">
         <table class="data-table">
           <thead><tr><th>ID</th><th>Kontainer</th><th>Tipe</th><th>Status</th><th>Tanggal</th><th>Catatan</th><th>Aksi</th></tr></thead>
           <tbody id="documentTable"></tbody>
         </table>
+        <div class="pagination" id="pg-document"></div>
       </div>
     </div>
 
@@ -285,82 +287,46 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
           <button class="btn btn-ghost btn-sm" onclick="markAllRead()">✓ Tandai Semua Dibaca</button>
         </div>
         <div id="notifList"></div>
+        <div class="pagination" id="pg-notif"></div>
       </div>
     </div>
 
     <!-- REPORTS -->
     <div class="section" id="sec-reports">
+      <div class="filter-bar">
+        <label>Bulan:</label>
+        <select id="rptMonth" onchange="renderReports()">
+          <option value="">Semua Bulan</option>
+          <option value="1">Januari</option><option value="2">Februari</option>
+          <option value="3">Maret</option><option value="4">April</option>
+          <option value="5">Mei</option><option value="6">Juni</option>
+          <option value="7">Juli</option><option value="8">Agustus</option>
+          <option value="9">September</option><option value="10">Oktober</option>
+          <option value="11">November</option><option value="12">Desember</option>
+        </select>
+        <label>Tahun:</label>
+        <select id="rptYear" onchange="renderReports()">
+          <option value="">Semua Tahun</option>
+          <option value="2024">2024</option>
+          <option value="2025">2025</option>
+          <option value="2026">2026</option>
+        </select>
+        <button class="btn btn-success" onclick="downloadExcel()">📥 Download Excel</button>
+      </div>
       <div class="stat-grid" id="reportStats"></div>
       <div class="grid-2">
         <div class="box"><div class="box-title">Status Kontainer</div><canvas id="reportChart" style="max-height:250px"></canvas></div>
         <div class="box"><div class="box-title">Performa Vessel</div><div id="vesselPerf"></div></div>
       </div>
-    </div>
-
-  </div>
-</div>
-
-<!-- ════════════════ MODALS ════════════════ -->
-
-<!-- MODAL: Tambah/Edit Kontainer -->
-<div class="modal-overlay" id="modalContainer">
-  <div class="modal">
-    <h3 id="modalContainerTitle">Tambah Kontainer</h3>
-    <p class="sub">Data kontainer yang akan dimonitor dalam sistem</p>
-
-    <!-- ② ID & Booking otomatis -->
-    <div class="form-row">
-      <div class="form-group">
-        <label>ID Kontainer <span style="color:var(--cyan);font-size:9px">● Otomatis</span></label>
-        <input id="f_id" class="input-autofill" readonly placeholder="Otomatis...">
-        <div class="auto-hint" id="hint_id"></div>
-      </div>
-      <div class="form-group">
-        <label>Booking No <span style="color:var(--cyan);font-size:9px">● Otomatis</span></label>
-        <input id="f_booking" class="input-autofill" readonly placeholder="Otomatis...">
-        <div class="auto-hint" id="hint_bk"></div>
+      <div class="box">
+        <div class="box-title">Data Kontainer <span id="reportTableInfo" style="font-weight:normal;"></span></div>
+        <table class="data-table">
+          <thead><tr><th>ID</th><th>Booking</th><th>Vessel</th><th>Asal</th><th>Tujuan</th><th>Tipe</th><th>Komoditi</th><th>Berat (kg)</th><th>Status</th><th>ETA</th><th>Tanggal</th></tr></thead>
+          <tbody id="reportTable"></tbody>
+        </table>
       </div>
     </div>
-    <div class="form-row">
-      <div class="form-group"><label>Nama Vessel</label><input id="f_vessel" placeholder="KM. Nusantara Jaya"></div>
-      <div class="form-group"><label>Voyage</label><input id="f_voyage" placeholder="NJ-2026-03"></div>
-    </div>
-    <div class="form-row">
-      <div class="form-group"><label>Asal</label><input id="f_origin" placeholder="Jakarta"></div>
-      <div class="form-group"><label>Tujuan</label><input id="f_dest" placeholder="Surabaya"></div>
-    </div>
-    <div class="form-row">
-      <div class="form-group"><label>Tipe Kontainer</label>
-        <select id="f_type">
-          <option>20ft Dry</option><option>40ft Dry</option>
-          <option>20ft Reefer</option><option>40ft Reefer</option><option>40ft HC</option>
-        </select>
-      </div>
-      <div class="form-group"><label>Berat (kg)</label><input id="f_weight" type="number" placeholder="18500"></div>
-    </div>
-    <div class="form-row">
-      <div class="form-group"><label>Komoditi</label><input id="f_commodity" placeholder="Elektronik, Tekstil..."></div>
-      <div class="form-group"><label>ETA</label><input id="f_eta" type="date"></div>
-    </div>
-    <div class="form-row">
-      <div class="form-group"><label>Status Awal</label>
-        <select id="f_status">
-          <option value="booking">📋 Booking</option>
-          <option value="gate_in">🚪 Gate-In Terminal</option>
-          <option value="on_vessel">🚢 Di Atas Kapal</option>
-          <option value="discharged">⬇️ Dibongkar</option>
-          <option value="clearance">🔍 Clearance</option>
-          <option value="on_delivery">🚛 Dalam Pengiriman</option>
-          <option value="completed">✅ Selesai</option>
-        </select>
-      </div>
-      <div class="form-group"><label>Pemilik (Stakeholder)</label><select id="f_owner"></select></div>
-    </div>
-    <div class="form-group"><label>Deskripsi Posisi</label><input id="f_pos_desc" placeholder="Yard A-12, Tanjung Perak"></div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('modalContainer')">Batal</button>
-      <button class="btn btn-primary" id="btnSaveContainer" onclick="saveContainer()">💾 Simpan Kontainer</button>
-    </div>
+
   </div>
 </div>
 
@@ -426,23 +392,51 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
   </div>
 </div>
 
-<!-- ════════════════ SCRIPTS ════════════════ -->
-<script src="api-client.js"></script>
+
+<!-- MODAL: Preview Dokumen -->
+<div class="modal-overlay" id="modalDocPreview">
+  <div class="modal" style="width:800px; max-width:95vw;">
+    <h3>Preview Dokumen</h3>
+    <p class="sub" id="previewSub"></p>
+    <div id="previewContainer" style="width:100%; height:500px; max-height:70vh; background:rgba(0,0,0,0.5); border-radius:8px; overflow:hidden; display:flex; align-items:center; justify-content:center; margin-bottom:14px;">
+    </div>
+    <div class="modal-footer">
+       <a id="previewDownloadBtn" href="" target="_blank" class="btn btn-success">⬇️ Download File</a>
+       <button class="btn btn-ghost" onclick="closeModal('modalDocPreview')">Tutup</button>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/api-client.js"></script>
 <script>
-// ── STATE ─────────────────────────────────────────────────
+// ── STATE
 let currentUser   = null;
 let mapInstance   = null;
-let mapMarkers    = {}; // { 'CTR001': L.marker }
+let mapMarkers    = {};
 let movChart, stChart, rptChart;
 let editingCtr    = null;
 let editingDoc    = null;
 let editingUser   = null;
+let _allReportData = [];
 
-// ── INIT ──────────────────────────────────────────────────
+const ITEMS_PER_PAGE = 8;
+
+function buildPagination(total, page, callbackName) {
+  const pages = Math.ceil(total / ITEMS_PER_PAGE);
+  if (pages <= 1) return '';
+  let html = `<button class="btn btn-sm btn-ghost" onclick="${callbackName}(${page-1})" ${page===1?'disabled':''}>&laquo;</button>`;
+  for (let i = 1; i <= pages; i++) {
+    html += `<button class="btn btn-sm ${i===page?'btn-primary':'btn-ghost'}" onclick="${callbackName}(${i})">${i}</button>`;
+  }
+  html += `<button class="btn btn-sm btn-ghost" onclick="${callbackName}(${page+1})" ${page===pages?'disabled':''}>&raquo;</button>`;
+  return html;
+}
+
+// ── INIT
 document.addEventListener('DOMContentLoaded', async () => {
   const check = await API.check();
   if (!check.authenticated || check.user.role !== 'admin') {
-    window.location.href = 'index.html'; return;
+    window.location.href = '../auth/login.html'; return;
   }
   currentUser = check.user;
   document.getElementById('userName').textContent    = currentUser.name;
@@ -453,17 +447,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   await renderDashboard();
   await updateBadges();
 
-  // Auto-refresh setiap 30 detik (background only, tanpa tampilkan countdown)
   setInterval(async () => {
     await updateBadges();
-    // Jika di halaman tracking, refresh marker peta
     if (document.getElementById('sec-tracking').classList.contains('active')) {
       await refreshMapMarkers();
     }
   }, 30000);
 });
 
-// ── NAVIGASI ──────────────────────────────────────────────
+// ── NAVIGASI
 const PAGE_TITLES = {
   dashboard:     ['Dashboard Admin',        'CMS › Dashboard'],
   containers:    ['Manajemen Kontainer',    'CMS › Kontainer'],
@@ -478,9 +470,11 @@ async function showSection(name) {
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('sec-' + name).classList.add('active');
-  document.querySelector(`.nav-item[onclick*="${name}"]`).classList.add('active');
-  const [t, b] = PAGE_TITLES[name];
-  document.getElementById('pageTitle').textContent    = t;
+  const navItem = document.querySelector(`.nav-item[onclick*="${name}"]`);
+  if(navItem) navItem.classList.add('active');
+  
+  const [t, b] = PAGE_TITLES[name] || ['Dashboard', 'CMS Tools'];
+  document.getElementById('pageTitle').textContent      = t;
   document.getElementById('pageBreadcrumb').textContent = b;
 
   if (name === 'containers')    await renderContainers();
@@ -491,7 +485,7 @@ async function showSection(name) {
   if (name === 'reports')       await renderReports();
 }
 
-// ── DASHBOARD ─────────────────────────────────────────────
+// ── DASHBOARD
 async function renderDashboard() {
   const [stats, notifs, ctrs] = await Promise.all([
     API.getStats(), API.getNotifications(), API.getContainers()
@@ -505,7 +499,6 @@ async function renderDashboard() {
     <div class="stat-card"><div class="stat-label">Notif Baru</div><div class="stat-value" style="color:var(--red)">${stats.unread_notifs}</div><div class="stat-icon">🔔</div></div>
   `;
 
-  // Chart pergerakan
   const ctx1 = document.getElementById('movChart').getContext('2d');
   if (movChart) movChart.destroy();
   movChart = new Chart(ctx1, {
@@ -519,7 +512,6 @@ async function renderDashboard() {
       scales:{ x:{ticks:{color:'#64748b'}}, y:{ticks:{color:'#64748b',stepSize:1}} } }
   });
 
-  // Chart donut status
   const ctx2 = document.getElementById('statusChart').getContext('2d');
   if (stChart) stChart.destroy();
   const by = stats.by_status || {};
@@ -533,14 +525,12 @@ async function renderDashboard() {
     options: { responsive:true, plugins:{legend:{position:'right',labels:{color:'#94a3b8',font:{size:10}}}} }
   });
 
-  // Tabel kontainer terbaru
   document.getElementById('recentTable').innerHTML = ctrs.slice(0,5).map(c =>
     `<tr><td class="mono">${c.id}</td><td style="font-size:11px">${c.vessel}</td>
     <td style="font-size:10px;color:var(--gray)">${c.origin}→${c.destination}</td>
     <td>${statusBadge(c.status)}</td></tr>`
   ).join('');
 
-  // Notif terbaru
   const nc = {success:'#10b981',warning:'#f59e0b',danger:'#ef4444',info:'#00d4ff'};
   document.getElementById('dashNotifList').innerHTML = (notifs.notifications||[]).slice(0,5).map(n =>
     `<div class="notif-item ${n.is_read?'':'unread'}">
@@ -551,13 +541,15 @@ async function renderDashboard() {
   ).join('') || '<div style="color:var(--gray);font-size:12px;text-align:center;padding:16px">Tidak ada notifikasi</div>';
 }
 
-// ── CONTAINERS ────────────────────────────────────────────
-async function renderContainers() {
+// ── CONTAINERS
+async function renderContainers(page = 1) {
   const data = await API.getContainers({
     search: document.getElementById('ctrSearch').value,
     status: document.getElementById('ctrFilter').value,
   });
-  document.getElementById('containerTable').innerHTML = data.map(c =>
+  const start  = (page - 1) * ITEMS_PER_PAGE;
+  const sliced = data.slice(start, start + ITEMS_PER_PAGE);
+  document.getElementById('containerTable').innerHTML = sliced.map(c =>
     `<tr>
       <td class="mono">${c.id}</td>
       <td style="font-size:11px;color:var(--gray)">${c.booking_no}</td>
@@ -568,122 +560,15 @@ async function renderContainers() {
       <td style="font-size:10px;color:var(--gray);max-width:130px">${c.position_desc}</td>
       <td style="white-space:nowrap">
         <button class="btn btn-ghost btn-sm" onclick="viewDetail('${c.id}')">👁</button>
-        <button class="btn btn-primary btn-sm" onclick="openEditContainer('${c.id}')">✏️</button>
         <button class="btn btn-danger btn-sm" onclick="deleteContainer('${c.id}')">🗑</button>
       </td>
     </tr>`
   ).join('') || `<tr><td colspan="8" style="text-align:center;padding:30px;color:var(--gray)">Tidak ada data kontainer</td></tr>`;
-}
-
-// ② AUTO-GENERATE ID & BOOKING NO saat Tambah Kontainer
-async function openAddContainer() {
-  editingCtr = null;
-  document.getElementById('modalContainerTitle').textContent = 'Tambah Kontainer Baru';
-  document.getElementById('btnSaveContainer').textContent = '💾 Simpan Kontainer';
-
-  // Generate ID otomatis: ambil nomor terbesar + 1
-  const ctrs   = await API.getContainers();
-  const nums   = ctrs.map(c => parseInt(c.id.replace(/\D/g,''))).filter(n => !isNaN(n));
-  const nextN  = nums.length > 0 ? Math.max(...nums) + 1 : 1;
-  const newId  = 'CTR' + String(nextN).padStart(3,'0');
-
-  // Generate Booking No otomatis
-  const yr     = new Date().getFullYear();
-  const bkNums = ctrs.map(c => parseInt((c.booking_no||'').replace(/\D/g,''))).filter(n=>!isNaN(n));
-  const bkNext = bkNums.length > 0 ? Math.max(...bkNums) + 1 : 1;
-  const newBk  = `BK-${yr}-${String(bkNext).padStart(4,'0')}`;
-
-  document.getElementById('f_id').value      = newId;
-  document.getElementById('f_booking').value = newBk;
-  document.getElementById('hint_id').textContent = `→ ID berikutnya setelah ${ctrs.length} kontainer`;
-  document.getElementById('hint_bk').textContent = `→ Nomor booking tahun ${yr}`;
-
-  // Reset field lainnya
-  ['f_vessel','f_voyage','f_origin','f_dest','f_commodity','f_pos_desc'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('f_weight').value = '';
-  document.getElementById('f_eta').value    = '';
-  document.getElementById('f_status').value = 'booking';
-
-  // Buat field ID & booking readonly (tidak bisa diubah manual)
-  document.getElementById('f_id').readOnly      = true;
-  document.getElementById('f_booking').readOnly = true;
-
-  await loadOwners();
-  document.getElementById('modalContainer').classList.add('open');
-}
-
-async function openEditContainer(id) {
-  editingCtr = id;
-  document.getElementById('modalContainerTitle').textContent = `Edit Kontainer: ${id}`;
-  document.getElementById('btnSaveContainer').textContent    = '💾 Update Kontainer';
-
-  const c = await API.getContainer(id);
-  if (!c) return;
-
-  document.getElementById('f_id').value        = c.id;
-  document.getElementById('f_booking').value   = c.booking_no;
-  document.getElementById('f_vessel').value    = c.vessel;
-  document.getElementById('f_voyage').value    = c.voyage;
-  document.getElementById('f_origin').value    = c.origin;
-  document.getElementById('f_dest').value      = c.destination;
-  document.getElementById('f_type').value      = c.type;
-  document.getElementById('f_weight').value    = c.weight;
-  document.getElementById('f_commodity').value = c.commodity;
-  document.getElementById('f_eta').value       = c.eta ? c.eta.split('T')[0] : '';
-  document.getElementById('f_status').value    = c.status;
-  document.getElementById('f_pos_desc').value  = c.position_desc;
-  document.getElementById('hint_id').textContent = '';
-  document.getElementById('hint_bk').textContent = '';
-
-  // Saat edit, ID tidak bisa diubah
-  document.getElementById('f_id').readOnly      = true;
-  document.getElementById('f_booking').readOnly = false;
-
-  await loadOwners(c.owner_id);
-  document.getElementById('modalContainer').classList.add('open');
-}
-
-async function loadOwners(selectedId = null) {
-  const users = await API.getUsers('stakeholder');
-  document.getElementById('f_owner').innerHTML = (users||[]).map(u =>
-    `<option value="${u.id}" ${u.id == selectedId ? 'selected':''}>${u.name} (${u.username})</option>`
-  ).join('');
-}
-
-async function saveContainer() {
-  const id = document.getElementById('f_id').value.trim();
-  if (!id) { showToast('ID Kontainer wajib diisi!','error'); return; }
-
-  const data = {
-    id,
-    booking_no:   document.getElementById('f_booking').value,
-    vessel:       document.getElementById('f_vessel').value,
-    voyage:       document.getElementById('f_voyage').value,
-    origin:       document.getElementById('f_origin').value,
-    destination:  document.getElementById('f_dest').value,
-    type:         document.getElementById('f_type').value,
-    weight:       parseInt(document.getElementById('f_weight').value)||0,
-    commodity:    document.getElementById('f_commodity').value,
-    eta:          document.getElementById('f_eta').value || null,
-    status:       document.getElementById('f_status').value,
-    owner_id:     parseInt(document.getElementById('f_owner').value)||null,
-    operator_id:  2,
-    position_lat: -7.2575,
-    position_lng: 112.7521,
-    position_desc: document.getElementById('f_pos_desc').value,
-  };
-
-  const res = editingCtr ? await API.updateContainer(data) : await API.createContainer(data);
-  if (res.error) { showToast(res.error, 'error'); return; }
-
-  closeModal('modalContainer');
-  await renderContainers();
-  await updateBadges();
-  showToast(editingCtr ? `✅ Kontainer ${id} berhasil diupdate!` : `✅ Kontainer ${id} berhasil ditambahkan!`);
+  document.getElementById('pg-container').innerHTML = buildPagination(filtered.length, page, 'renderContainers');
 }
 
 async function deleteContainer(id) {
-  if (!confirm(`Hapus kontainer ${id}?\n\nSemua data terkait (dokumen, timeline, notifikasi) akan ikut terhapus.`)) return;
+  if (!confirm(`Hapus kontainer ${id}?\\n\\nSemua data terkait akan ikut terhapus.`)) return;
   const res = await API.deleteContainer(id);
   if (res.error) { showToast(res.error,'error'); return; }
   await renderContainers();
@@ -718,13 +603,33 @@ async function viewDetail(id) {
   document.getElementById('modalDetail').classList.add('open');
 }
 
-// ── DOCUMENTS ─────────────────────────────────────────────
-async function renderDocuments() {
-  const data = await API.getDocuments({
-    search: document.getElementById('docSearch').value,
-    status: document.getElementById('docFilter').value,
+// ── DOCUMENTS
+let _allDocData = [];
+async function renderDocuments(page = 1) {
+  const reqData = {
+    search: document.getElementById('docSearch')?.value || '',
+    status: document.getElementById('docFilter')?.value || '',
+  };
+  const data = await API.getDocuments(reqData);
+  
+  const day = document.getElementById('docDay')?.value || '';
+  const month = document.getElementById('docMonth')?.value || '';
+  const year = document.getElementById('docYear')?.value || '';
+  
+  const filtered = data.filter(d => {
+    if (!d.created_at) return true;
+    const date = new Date(d.created_at);
+    if (day && date.getDate() !== parseInt(day)) return false;
+    if (month && date.getMonth() + 1 !== parseInt(month)) return false;
+    if (year && date.getFullYear() !== parseInt(year)) return false;
+    return true;
   });
-  document.getElementById('documentTable').innerHTML = data.map(d =>
+  
+  _allDocData = filtered;
+
+  const start  = (page - 1) * ITEMS_PER_PAGE;
+  const sliced = filtered.slice(start, start + ITEMS_PER_PAGE);
+  document.getElementById('documentTable').innerHTML = sliced.map(d =>
     `<tr>
       <td class="mono">${d.id}</td>
       <td><span class="mono">${d.container_id}</span><br><span style="font-size:10px;color:var(--gray)">${d.vessel||''}</span></td>
@@ -732,9 +637,13 @@ async function renderDocuments() {
       <td>${docBadge(d.status)}</td>
       <td style="font-size:11px;color:var(--gray)">${formatDateTime(d.created_at)}</td>
       <td style="font-size:11px;max-width:160px">${d.notes||'-'}</td>
-      <td><button class="btn btn-ghost btn-sm" onclick="openDocStatus('${d.id}','${d.status}','${d.type}')">✏️ Update</button></td>
+      <td style="white-space:nowrap">
+        ${d.filepath ? `<button class="btn btn-ghost btn-sm" onclick="openDocPreview(\'${d.filepath}\', \'${d.type}\', \'${d.id}\')">👁 Preview</button>` : '<span style="font-size:10px;color:var(--gray)">Tidak ada file</span>'}
+        <button class="btn btn-ghost btn-sm" onclick="openDocStatus('${d.id}','${d.status}','${d.type}')">✏️ Update</button>
+      </td>
     </tr>`
   ).join('') || `<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--gray)">Tidak ada dokumen</td></tr>`;
+  document.getElementById('pg-document').innerHTML = buildPagination(filtered.length, page, 'renderDocuments');
 }
 
 function openDocStatus(id, status, type) {
@@ -758,19 +667,16 @@ async function saveDocStatus() {
   showToast('✅ Status dokumen berhasil diupdate!');
 }
 
-// ③ LIVE TRACKING — marker bergerak saat status/posisi berubah
+// ── LIVE TRACKING
 async function renderTracking() {
-  // Inisialisasi peta hanya sekali
   if (!mapInstance) {
     mapInstance = L.map('adminMap').setView([-7.2575, 112.7521], 9);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap'
     }).addTo(mapInstance);
   }
-
   await refreshMapMarkers();
 
-  // Auto-refresh peta setiap 15 detik saat halaman tracking aktif
   if (!window._trackInterval) {
     window._trackInterval = setInterval(async () => {
       if (document.getElementById('sec-tracking').classList.contains('active')) {
@@ -780,99 +686,57 @@ async function renderTracking() {
   }
 }
 
-// Fungsi update marker peta — marker BERPINDAH saat status berubah
 async function refreshMapMarkers() {
   const containers = await API.getContainers();
   const active     = containers.filter(c => c.status !== 'completed');
   const activeIds  = active.map(c => c.id);
 
-  // Hapus marker kontainer yang sudah selesai/dihapus
   Object.keys(mapMarkers).forEach(id => {
-    if (!activeIds.includes(id)) {
-      mapMarkers[id].remove();
-      delete mapMarkers[id];
-    }
+    if (!activeIds.includes(id)) { mapMarkers[id].remove(); delete mapMarkers[id]; }
   });
 
   active.forEach(c => {
-    const s   = STATUS_CONFIG[c.status] || { label: c.status, color:'#64748b', icon:'📦' };
+    const s   = STATUS_CONFIG[c.status] || { label:c.status, color:'#64748b', icon:'📦' };
     const lat = parseFloat(c.position_lat) || -7.2575;
     const lng = parseFloat(c.position_lng) || 112.7521;
 
-    const iconHtml = `
-      <div style="background:${s.color};color:white;padding:4px 10px;border-radius:20px;
-        font-size:10px;font-weight:700;white-space:nowrap;
-        box-shadow:0 3px 10px rgba(0,0,0,.4);border:2px solid rgba(255,255,255,.3)">
-        ${s.icon} ${c.id}
-      </div>`;
+    const iconHtml = `<div style="background:${s.color};color:white;padding:4px 10px;border-radius:20px;font-size:10px;font-weight:700;white-space:nowrap;box-shadow:0 3px 10px rgba(0,0,0,.4)">${s.icon} ${c.id}</div>`;
     const icon = L.divIcon({ html: iconHtml, className:'', iconAnchor:[0,0] });
-
-    const popup = `<div style="font-family:sans-serif;min-width:180px">
-      <div style="font-weight:700;font-size:13px;margin-bottom:6px">📦 ${c.id}</div>
-      <div style="font-size:11px;color:#555;margin-bottom:2px">🚢 ${c.vessel}</div>
-      <div style="font-size:11px;color:#555;margin-bottom:2px">🔀 ${c.origin} → ${c.destination}</div>
-      <div style="font-size:11px;color:#555;margin-bottom:2px">📍 ${c.position_desc||'-'}</div>
-      <div style="margin-top:6px;padding:3px 8px;background:${s.color};color:white;border-radius:10px;font-size:10px;display:inline-block">
-        ${s.icon} ${s.label}
-      </div>
-    </div>`;
+    const popup = `<b>${c.id}</b><br>${c.vessel}<br>${c.origin}→${c.destination}<br>📍 ${c.position_desc||'-'}`;
 
     if (mapMarkers[c.id]) {
-      // ✅ MARKER BERPINDAH: update posisi & tampilan tanpa hapus marker
-      const oldLatLng = mapMarkers[c.id].getLatLng();
-      const newLatLng = L.latLng(lat, lng);
-
-      if (oldLatLng.lat !== lat || oldLatLng.lng !== lng) {
-        // Animasi perpindahan marker
-        mapMarkers[c.id].setLatLng(newLatLng);
-        // Flash efek di panel kanan
-        const el = document.querySelector(`[data-id="${c.id}"]`);
-        if (el) { el.style.borderColor = s.color; setTimeout(()=>el.style.borderColor='',2000); }
-      }
+      mapMarkers[c.id].setLatLng(L.latLng(lat, lng));
       mapMarkers[c.id].setIcon(icon);
       mapMarkers[c.id].setPopupContent(popup);
     } else {
-      // Marker baru
-      mapMarkers[c.id] = L.marker([lat, lng], { icon })
-        .addTo(mapInstance)
-        .bindPopup(popup);
+      mapMarkers[c.id] = L.marker([lat, lng], { icon }).addTo(mapInstance).bindPopup(popup);
     }
   });
 
-  // Update panel kanan
   document.getElementById('activeCount').textContent = `${active.length} kontainer`;
-  document.getElementById('mapLastUpdate').textContent =
-    `Diupdate: ${new Date().toLocaleTimeString('id-ID')}`;
+  document.getElementById('mapLastUpdate').textContent = `Diupdate: ${new Date().toLocaleTimeString('id-ID')}`;
 
   document.getElementById('trackingList').innerHTML = active.map(c => {
     const s   = STATUS_CONFIG[c.status] || {};
     const lat = parseFloat(c.position_lat) || -7.2575;
     const lng = parseFloat(c.position_lng) || 112.7521;
-    return `<div data-id="${c.id}" style="padding:10px;border:1px solid var(--border);border-radius:10px;
-      margin-bottom:8px;cursor:pointer;transition:border-color .3s"
-      onclick="mapInstance.setView([${lat},${lng}],14);mapMarkers['${c.id}']?.openPopup()"
-      onmouseover="this.style.borderColor='${s.color||'var(--cyan)'}'"
-      onmouseout="this.style.borderColor='var(--border)'">
+    return `<div data-id="${c.id}" style="padding:10px;border:1px solid var(--border);border-radius:10px;margin-bottom:8px;cursor:pointer"
+      onclick="mapInstance.setView([${lat},${lng}],14);mapMarkers['${c.id}']?.openPopup()">
       <div style="display:flex;justify-content:space-between;align-items:center">
-        <span class="mono">${c.id}</span>
-        ${statusBadge(c.status)}
+        <span class="mono">${c.id}</span>${statusBadge(c.status)}
       </div>
       <div style="font-size:11px;color:var(--gray);margin-top:4px">📍 ${c.position_desc||'-'}</div>
       <div style="font-size:10px;color:var(--gray)">${c.vessel} · ${c.origin}→${c.destination}</div>
     </div>`;
   }).join('') || '<div style="color:var(--gray);text-align:center;padding:20px;font-size:12px">Tidak ada kontainer aktif</div>';
 
-  // Legend peta
   document.getElementById('mapLegend').innerHTML = [...new Set(active.map(c=>c.status))].map(st => {
     const s = STATUS_CONFIG[st] || {};
-    return `<div class="map-legend-item">
-      <div class="map-legend-dot" style="background:${s.color||'#64748b'}"></div>
-      <span>${s.label||st}</span>
-    </div>`;
+    return `<div class="map-legend-item"><div class="map-legend-dot" style="background:${s.color||'#64748b'}"></div><span>${s.label||st}</span></div>`;
   }).join('');
 }
 
-// ── USERS ─────────────────────────────────────────────────
+// ── USERS
 async function renderUsers() {
   const users = await API.getUsers();
   const rc    = { admin:'#f59e0b', operator:'#10b981', stakeholder:'#00d4ff' };
@@ -937,13 +801,16 @@ async function deleteUser(id) {
   showToast('🗑️ Pengguna berhasil dihapus');
 }
 
-// ── NOTIFICATIONS ─────────────────────────────────────────
-async function renderNotifications() {
+// ── NOTIFICATIONS
+async function renderNotifications(page = 1) {
   const data   = await API.getNotifications();
   const notifs = data.notifications || [];
+  const start  = (page - 1) * ITEMS_PER_PAGE;
+  const sliced = notifs.slice(start, start + ITEMS_PER_PAGE);
+
   document.getElementById('unreadCount').textContent = `${data.unread_count} belum dibaca`;
   const nc = { success:'#10b981', warning:'#f59e0b', danger:'#ef4444', info:'#00d4ff' };
-  document.getElementById('notifList').innerHTML = notifs.map(n =>
+  document.getElementById('notifList').innerHTML = sliced.map(n =>
     `<div class="notif-item ${n.is_read?'':'unread'}" onclick="markRead('${n.id}')">
       <div class="notif-dot" style="background:${nc[n.type]||'#64748b'}"></div>
       <div style="flex:1">
@@ -953,62 +820,184 @@ async function renderNotifications() {
       ${!n.is_read?'<span style="font-size:10px;color:var(--cyan)">BARU</span>':''}
     </div>`
   ).join('') || '<div style="color:var(--gray);text-align:center;padding:30px">Tidak ada notifikasi</div>';
+  document.getElementById('pg-notif').innerHTML = buildPagination(notifs.length, page, 'renderNotifications');
 }
 
 async function markRead(id) { await API.markRead(id); await renderNotifications(); await updateBadges(); }
 async function markAllRead() { await API.markRead('all'); await renderNotifications(); await updateBadges(); }
 
-// ── REPORTS ───────────────────────────────────────────────
+// ── REPORTS
 async function renderReports() {
-  const stats = await API.getStats();
+  const month = document.getElementById('rptMonth').value;
+  const year  = document.getElementById('rptYear').value;
+
+  const allCtrs = await API.getContainers();
+  const stats   = await API.getStats();
+
+  let filtered = allCtrs.filter(c => {
+    const d = new Date(c.created_at);
+    if (month && d.getMonth() + 1 !== parseInt(month)) return false;
+    if (year  && d.getFullYear() !== parseInt(year))   return false;
+    return true;
+  });
+
+  _allReportData = filtered;
+
+  document.getElementById('reportTableInfo').textContent = `${filtered.length} data ditemukan`;
+
+  const total     = filtered.length;
+  const completed = filtered.filter(c=>c.status==='completed').length;
   document.getElementById('reportStats').innerHTML = `
-    <div class="stat-card"><div class="stat-label">Total</div><div class="stat-value">${stats.total}</div><div class="stat-icon">📦</div></div>
-    <div class="stat-card"><div class="stat-label">Completion Rate</div><div class="stat-value">${stats.total>0?Math.round(stats.completed/stats.total*100):0}%</div><div class="stat-icon">📊</div></div>
+    <div class="stat-card"><div class="stat-label">Total (Filter)</div><div class="stat-value">${total}</div><div class="stat-icon">📦</div></div>
+    <div class="stat-card"><div class="stat-label">Selesai</div><div class="stat-value" style="color:var(--green)">${completed}</div><div class="stat-icon">✅</div></div>
+    <div class="stat-card"><div class="stat-label">Completion Rate</div><div class="stat-value">${total>0?Math.round(completed/total*100):0}%</div><div class="stat-icon">📊</div></div>
     <div class="stat-card"><div class="stat-label">Dok Pending</div><div class="stat-value" style="color:var(--gold)">${stats.pending_docs}</div><div class="stat-icon">📄</div></div>
   `;
+
+  const byStatus = {};
+  filtered.forEach(c => { byStatus[c.status] = (byStatus[c.status]||0) + 1; });
   const ctx = document.getElementById('reportChart').getContext('2d');
   if (rptChart) rptChart.destroy();
-  const by = stats.by_status || {};
   rptChart = new Chart(ctx, {
     type: 'bar',
-    data: { labels: Object.keys(by).map(k=>STATUS_CONFIG[k]?.label||k),
-      datasets:[{ label:'Jumlah', data:Object.values(by),
+    data: { labels: Object.keys(byStatus).map(k=>STATUS_CONFIG[k]?.label||k),
+      datasets:[{ label:'Jumlah', data:Object.values(byStatus),
         backgroundColor:['#6366f1','#0891b2','#2563eb','#f59e0b','#d97706','#7c3aed','#10b981','#ef4444'], borderRadius:6 }] },
     options:{ responsive:true, plugins:{legend:{display:false}}, scales:{x:{ticks:{color:'#64748b'}}, y:{ticks:{color:'#64748b',stepSize:1}}} }
   });
-  document.getElementById('vesselPerf').innerHTML = (stats.vessels||[]).map(v =>
-    `<div style="display:flex;justify-content:space-between;padding:10px;background:rgba(255,255,255,.03);border-radius:8px;margin-bottom:6px">
-      <span style="font-size:12px;color:var(--white)">🚢 ${v.vessel}</span>
-      <span class="badge" style="background:rgba(0,212,255,.15);color:var(--cyan)">${v.cnt} kontainer</span>
-    </div>`
-  ).join('') || '<div style="color:var(--gray);font-size:12px">Tidak ada data</div>';
+
+  const vessels = [...new Set(filtered.map(c=>c.vessel))];
+  document.getElementById('vesselPerf').innerHTML = vessels.map(v => {
+    const vCtrs = filtered.filter(c=>c.vessel===v);
+    const done  = vCtrs.filter(c=>c.status==='completed').length;
+    const pct   = vCtrs.length>0?Math.round(done/vCtrs.length*100):0;
+    return `<div style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px">
+        <span style="color:var(--white)">🚢 ${v}</span><span style="color:var(--gray)">${done}/${vCtrs.length} (${pct}%)</span>
+      </div>
+      <div class="progress-wrap"><div class="progress-fill" style="width:${pct}%;background:linear-gradient(90deg,var(--blue),var(--cyan))"></div></div>
+    </div>`;
+  }).join('') || '<div style="color:var(--gray);font-size:12px">Tidak ada data</div>';
+
+  document.getElementById('reportTable').innerHTML = filtered.map(c =>
+    `<tr>
+      <td class="mono">${c.id}</td>
+      <td style="font-size:11px;color:var(--gray)">${c.booking_no||'-'}</td>
+      <td style="font-size:11px">${c.vessel||'-'}</td>
+      <td style="font-size:11px">${c.origin||'-'}</td>
+      <td style="font-size:11px">${c.destination||'-'}</td>
+      <td style="font-size:11px">${c.type||'-'}</td>
+      <td style="font-size:11px">${c.commodity||'-'}</td>
+      <td style="font-size:11px;text-align:right">${Number(c.weight||0).toLocaleString()}</td>
+      <td>${statusBadge(c.status)}</td>
+      <td style="font-size:11px;color:var(--gray)">${formatDate(c.eta)}</td>
+      <td style="font-size:11px;color:var(--gray)">${formatDate(c.created_at)}</td>
+    </tr>`
+  ).join('') || `<tr><td colspan="11" style="text-align:center;padding:30px;color:var(--gray)">Tidak ada data untuk filter ini</td></tr>`;
 }
 
-// ── BADGES ────────────────────────────────────────────────
+// ── DOWNLOAD EXCEL
+async function downloadExcel() {
+  if (_allReportData.length === 0) {
+    await renderReports();
+  }
+  if (_allReportData.length === 0) {
+    showToast('Tidak ada data untuk diunduh', 'warning'); return;
+  }
+
+  const month = document.getElementById('rptMonth').value;
+  const year  = document.getElementById('rptYear').value;
+  const monthNames = ['','Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+  const filterLabel = `${month?monthNames[parseInt(month)]+'-':''}${year||'Semua'}`;
+
+  const headers = ['ID Kontainer','Booking No','Vessel','Asal','Tujuan','Tipe','Komoditi','Berat (kg)','Status','ETA','Tanggal Dibuat'];
+  const rows = _allReportData.map(c => [
+    c.id, c.booking_no||'', c.vessel||'', c.origin||'', c.destination||'',
+    c.type||'', c.commodity||'', c.weight||0,
+    STATUS_CONFIG[c.status]?.label || c.status,
+    c.eta ? c.eta.split('T')[0] : '',
+    c.created_at ? c.created_at.split('T')[0] : ''
+  ]);
+
+  const wsData = [headers, ...rows];
+  const ws     = XLSX.utils.aoa_to_sheet(wsData);
+
+  ws['!cols'] = [16,14,20,14,14,12,16,10,18,12,14].map(w=>({wch:w}));
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Laporan Kontainer');
+  XLSX.writeFile(wb, `Laporan_CMS_${filterLabel}.xlsx`);
+  showToast(`📥 File Laporan_CMS_${filterLabel}.xlsx berhasil diunduh!`);
+}
+
+// ── BADGES
 async function updateBadges() {
   const stats = await API.getStats();
   document.getElementById('nbContainer').textContent = stats.by_status?.discharged || 0;
   document.getElementById('nbDoc').textContent       = stats.pending_docs || 0;
 }
 
-// ── TOAST ─────────────────────────────────────────────────
-function showToast(msg, type = 'success') {
-  const colors = { success:'#10b981', error:'#ef4444', info:'#38bdf8', warning:'#f59e0b' };
-  const t = document.createElement('div');
-  t.className = 'toast';
-  t.style.borderLeft = `4px solid ${colors[type]||colors.success}`;
-  t.textContent = msg;
-  document.body.appendChild(t);
-  setTimeout(() => t.remove(), 3000);
-}
-
-// ── MODAL CLOSE ───────────────────────────────────────────
+// ── MODAL CLOSE
 function closeModal(id) {
   document.getElementById(id).classList.remove('open');
 }
 document.querySelectorAll('.modal-overlay').forEach(m => {
   m.addEventListener('click', e => { if (e.target === m) closeModal(m.id); });
 });
+
+async function downloadDocExcel() {
+  if (!_allDocData || _allDocData.length === 0) {
+    alert('Tidak ada data dokumen untuk diunduh'); return;
+  }
+  
+  const day = document.getElementById('docDay')?.value || '';
+  const month = document.getElementById('docMonth')?.value || '';
+  const year  = document.getElementById('docYear')?.value || '';
+  const filterLabel = `${day?day+'-':''}${month?month+'-':''}${year||'Semua'}`;
+
+  const headers = ['ID Dokumen', 'ID Kontainer', 'Vessel', 'Tipe Dokumen', 'Status', 'Catatan', 'Tanggal Dibuat', 'Link File'];
+  const rows = _allDocData.map(d => [
+    d.id,
+    d.container_id || '',
+    d.vessel || '',
+    d.type || '',
+    d.status || '',
+    d.notes || '',
+    d.created_at ? d.created_at.split('T').join(' ').split('.')[0] : '',
+    d.filepath || ''
+  ]);
+
+  const wsData = [headers, ...rows];
+  const ws = XLSX.utils.aoa_to_sheet(wsData);
+  ws['!cols'] = [12, 16, 20, 20, 12, 25, 18, 50].map(w=>({wch:w}));
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Laporan Dokumen');
+  XLSX.writeFile(wb, `Laporan_Dokumen_CMS_${filterLabel}.xlsx`);
+}
+
+
+window.openDocPreview = function(filepath, type, id) {
+  document.getElementById('previewSub').textContent = `Dokumen: ${type} (${id})`;
+  const ext = filepath.split('.').pop().toLowerCase();
+  let html = '';
+  if (['png','jpg','jpeg','gif'].includes(ext)) {
+    html = `<img src="${filepath}" style="max-width:100%; max-height:100%; object-fit:contain;">`;
+  } else {
+    // try object for pdf for better compatibility over iframe
+    if(ext === 'pdf') {
+        html = `<object data="${filepath}" type="application/pdf" width="100%" height="100%">
+                  <iframe src="${filepath}" style="width:100%; height:100%; border:none;"></iframe>
+                </object>`;
+    } else {
+        html = `<iframe src="${filepath}" style="width:100%; height:100%; border:none;"></iframe>`;
+    }
+  }
+  document.getElementById('previewContainer').innerHTML = html;
+  document.getElementById('previewDownloadBtn').href = filepath;
+  document.getElementById('modalDocPreview').classList.add('open');
+};
+
 </script>
 </body>
 </html>

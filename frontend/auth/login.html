@@ -58,8 +58,20 @@ body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(r
     <p class="sub">Gunakan akun yang telah diberikan untuk mengakses dashboard</p>
     <div class="err" id="err"></div>
     <div class="fg"><label>Username</label><input id="u" type="text" placeholder="Masukkan username" autocomplete="username"></div>
-    <div class="fg"><label>Password</label><input id="p" type="password" placeholder="Masukkan password" autocomplete="current-password"></div>
+    <div class="fg">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 7px;">
+            <label style="margin-bottom: 0;">Password</label>
+            <a href="register.html#forgot" style="color: var(--gray); font-size: 11px; text-decoration: none; font-weight: 600; transition: color 0.2s;" onmouseover="this.style.color='var(--cyan)'" onmouseout="this.style.color='var(--gray)'">Lupa Password?</a>
+        </div>
+        <input id="p" type="password" placeholder="Masukkan password" autocomplete="current-password">
+    </div>
     <button class="btn-login" id="btnLogin" onclick="doLogin()">Masuk ke Dashboard →</button>
+    
+    <div style="text-align: center; margin-top: 15px; font-size: 13px;">
+      <span style="color: var(--gray);">Belum punya akun?</span>
+      <a href="register.html" style="color: var(--cyan); text-decoration: none; font-weight: 600; transition: color 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--cyan)'">Daftar sekarang</a>
+    </div>
+
     <div class="demo">
       <p>Akun Demo</p>
       <div class="demo-grid">
@@ -86,13 +98,13 @@ async function doLogin() {
   btn.disabled=true; btn.innerHTML='<span class="spin"></span>Memproses...';
 
   try {
-    const res = await fetch('api/auth.php?action=login', {
+    const res = await fetch('../../backend/api/auth.php?action=login', {
       method:'POST', credentials:'include',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({username:u, password:p})
     });
     const data = await res.json();
-    if(data.success){ window.location.href = data.redirect; }
+    if(data.success){ window.location.href = '../dashboards/' + data.redirect; }
     else { err.textContent = data.error || 'Login gagal'; err.style.display='block'; }
   } catch(e) {
     err.textContent='Tidak dapat terhubung ke server. Pastikan Apache & MySQL sudah berjalan di XAMPP.';
