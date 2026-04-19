@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stakeholder — CMS</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<style>
+:root{--bg:#060b18;--bg2:#0a1224;--sidebar:#050a15;--card:#0c1628;--border:rgba(255,255,255,.07);--blue:#2563eb;--cyan:#38bdf8;--green:#10b981;--gold:#f59e0b;--red:#ef4444;--gray:#64748b;--light:#94a3b8;--white:#f1f5f9;--text:#cbd5e1;--font:'Space Grotesk',sans-serif;--mono:'JetBrains Mono',monospace;}
+*{margin:0;padding:0;box-sizing:border-box;}body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex;min-height:100vh;}
+.sidebar{width:240px;min-height:100vh;background:var(--sidebar);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;z-index:100;}
+.sidebar-logo{padding:24px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;}
+.sidebar-logo .icon{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--blue),var(--cyan));display:flex;align-items:center;justify-content:center;font-size:18px;}
+.brand{font-size:16px;font-weight:700;color:var(--white);}.sub-role{font-size:10px;color:var(--gray);}
+.sidebar-nav{padding:12px 10px;flex:1;}
+.nav-section{font-size:10px;color:var(--gray);text-transform:uppercase;letter-spacing:1px;font-weight:600;padding:12px 10px 6px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;cursor:pointer;transition:all .2s;font-size:13px;color:var(--light);margin-bottom:2px;border:none;background:none;width:100%;text-align:left;}
+.nav-item:hover{background:rgba(255,255,255,.05);color:var(--white);}
+.nav-item.active{background:rgba(37,99,235,.15);color:var(--cyan);border:1px solid rgba(56,189,248,.15);}
+.nav-item .ni{font-size:16px;width:20px;text-align:center;}
+.nb{margin-left:auto;background:var(--red);color:white;border-radius:20px;padding:1px 7px;font-size:10px;font-weight:700;}
+.sidebar-footer{padding:16px;border-top:1px solid var(--border);}
+.user-card{display:flex;align-items:center;gap:10px;padding:10px;background:rgba(255,255,255,.04);border-radius:10px;}
+.user-avatar{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--blue),#6366f1);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:white;}
+.user-name{font-size:12px;font-weight:600;color:var(--white);}.user-role{font-size:10px;color:var(--cyan);}
+.logout-btn{margin-left:auto;background:none;border:none;cursor:pointer;color:var(--gray);font-size:16px;}
+.logout-btn:hover{color:var(--red);}
+.main{margin-left:240px;flex:1;display:flex;flex-direction:column;}
+.topbar{padding:16px 24px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
+.topbar h2{font-size:16px;font-weight:700;color:var(--white);}
+.breadcrumb{font-size:11px;color:var(--gray);}
+.notif-btn{position:relative;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:10px;padding:8px 10px;cursor:pointer;color:var(--light);font-size:16px;}
+.notif-badge{position:absolute;top:-4px;right:-4px;background:var(--red);color:white;border-radius:50%;width:16px;height:16px;font-size:9px;display:flex;align-items:center;justify-content:center;font-weight:700;}
+.content{padding:24px;flex:1;}
+.section{display:none;}.section.active{display:block;}
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:16px;margin-bottom:24px;}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;transition:transform .2s;position:relative;overflow:hidden;}
+.stat-card:hover{transform:translateY(-3px);}
+.stat-label{font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:.8px;font-weight:600;margin-bottom:10px;}
+.stat-value{font-size:30px;font-weight:700;color:var(--white);font-family:var(--mono);}
+.stat-icon{position:absolute;bottom:14px;right:16px;font-size:28px;opacity:.3;}
+.box{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:16px;}
+.box-title{font-size:13px;font-weight:700;color:var(--white);margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;}
+.box-title span{font-size:11px;color:var(--gray);font-weight:500;}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+.grid-3{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:16px;}
+.data-table{width:100%;border-collapse:collapse;font-size:12px;}
+.data-table th{background:rgba(255,255,255,.04);padding:10px 12px;text-align:left;color:var(--gray);font-size:10px;text-transform:uppercase;border-bottom:1px solid var(--border);}
+.data-table td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.03);vertical-align:middle;}
+.data-table tr:hover td{background:rgba(255,255,255,.02);}
+.mono{font-family:var(--mono);font-size:11px;color:var(--cyan);}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:600;white-space:nowrap;}
+.btn{padding:8px 16px;border-radius:10px;border:none;cursor:pointer;font-family:var(--font);font-size:12px;font-weight:600;transition:all .2s;display:inline-flex;align-items:center;gap:6px;}
+.btn-primary{background:var(--blue);color:white;}.btn-primary:hover{background:#1d4ed8;}
+.btn-sm{padding:5px 10px;font-size:11px;border-radius:7px;}
+.btn-ghost{background:rgba(255,255,255,.06);color:var(--light);border:1px solid var(--border);}
+.btn-ghost:hover{background:rgba(255,255,255,.1);}
+.filter-bar{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 18px;margin-bottom:16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;}
+.search-input{padding:7px 12px;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:8px;color:var(--white);font-family:var(--font);font-size:12px;outline:none;width:220px;}
+.search-input::placeholder{color:var(--gray);}
+.search-input:focus{border-color:var(--cyan);}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:999;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--bg2);border:1px solid var(--border);border-radius:20px;width:640px;max-width:95vw;max-height:90vh;overflow-y:auto;padding:28px;}
+.modal h3{font-size:17px;color:var(--white);margin-bottom:6px;}
+.modal .sub{font-size:12px;color:var(--gray);margin-bottom:22px;}
+.modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--border);}
+.form-group{margin-bottom:14px;}
+.form-group label{display:block;font-size:11px;color:var(--gray);font-weight:600;text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px;}
+.form-group input,.form-group select,.form-group textarea{width:100%;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:10px;padding:10px 12px;color:var(--white);font-family:var(--font);font-size:13px;outline:none;}
+.form-group input:focus,.form-group select:focus{border-color:var(--cyan);}
+.form-group select option{background:var(--bg2);}
+.form-group textarea{resize:vertical;min-height:80px;}
+.notif-item{display:flex;gap:12px;padding:12px 14px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px;margin-bottom:8px;cursor:pointer;}
+.notif-item.unread{border-color:rgba(56,189,248,.2);background:rgba(56,189,248,.04);}
+.notif-dot{width:8px;height:8px;border-radius:50%;margin-top:4px;flex-shrink:0;}
+.timeline{position:relative;padding-left:24px;}
+.timeline::before{content:'';position:absolute;left:8px;top:6px;bottom:6px;width:2px;background:var(--border);}
+.tl-item{position:relative;padding:0 0 20px 16px;}
+.tl-item::before{content:'';position:absolute;left:-10px;top:4px;width:12px;height:12px;border-radius:50%;border:2px solid var(--border);background:var(--bg2);}
+.tl-item.done::before{background:var(--green);border-color:var(--green);}
+.tl-item.active::before{background:var(--cyan);border-color:var(--cyan);box-shadow:0 0 10px rgba(56,189,248,.5);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{box-shadow:0 0 6px rgba(56,189,248,.4)}50%{box-shadow:0 0 14px rgba(56,189,248,.8)}}
+.tl-event{font-size:12px;font-weight:600;color:var(--white);}
+.tl-meta{font-size:10px;color:var(--gray);margin-top:2px;}
+.ctr-card{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px;padding:14px 16px;cursor:pointer;transition:all .2s;margin-bottom:10px;}
+.ctr-card:hover{background:rgba(255,255,255,.06);border-color:rgba(56,189,248,.2);transform:translateX(3px);}
+#trackMap{height:300px;border-radius:12px;}
+::-webkit-scrollbar{width:6px;}::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:3px;}
+</style>
+</head>
+<body>
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <div class="icon">📦</div>
+    <div><div class="brand">CMS</div><div class="sub-role">Pengguna Jasa</div></div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section">Monitoring</div>
+    <button class="nav-item active" onclick="showSection('dashboard')"><span class="ni">📊</span> Dashboard</button>
+    <button class="nav-item" onclick="showSection('tracking')"><span class="ni">🗺️</span> Live Tracking</button>
+    <button class="nav-item" onclick="showSection('containers')"><span class="ni">📦</span> Kontainer Saya</button>
+    <button class="nav-item" onclick="showSection('documents')"><span class="ni">📄</span> Dokumen <span class="nb" id="nbDoc">0</span></button>
+    <button class="nav-item" onclick="showSection('notifications')"><span class="ni">🔔</span> Notifikasi <span class="nb" id="nbNotif">0</span></button>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="user-avatar" id="userInitial">S</div>
+      <div><div class="user-name" id="userName">Stakeholder</div><div class="user-role">Pengguna Jasa</div></div>
+      <button class="logout-btn" onclick="doLogout()">⏻</button>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+  <div class="topbar">
+    <div><h2 id="pageTitle">Dashboard</h2><div class="breadcrumb" id="pageBreadcrumb">CMS › Dashboard</div></div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <button class="notif-btn" onclick="showSection('notifications')">🔔<span class="notif-badge" id="notifCount">0</span></button>
+    </div>
+  </div>
+  <div class="content">
+
+    <div class="section active" id="sec-dashboard">
+      <div class="stat-grid" id="statGrid"></div>
+      <div class="grid-3">
+        <div class="box"><div class="box-title">Kontainer Aktif <span>Klik untuk detail</span></div><div id="ctrCards"></div></div>
+        <div class="box"><div class="box-title">Notifikasi Terbaru</div><div id="dashNotif"></div></div>
+      </div>
+    </div>
+
+    <div class="section" id="sec-tracking">
+      <div class="grid-3">
+        <div class="box"><div class="box-title">Peta Live Tracking</div><div id="trackMap"></div></div>
+        <div class="box"><div class="box-title">Progress Pengiriman</div><div id="trackList"></div></div>
+      </div>
+    </div>
+
+    <div class="section" id="sec-containers">
+      <div class="filter-bar">
+        <input class="search-input" id="ctrSearch" placeholder="🔍 Cari kontainer..." oninput="renderContainers()">
+      </div>
+      <div class="box">
+        <table class="data-table">
+          <thead><tr><th>ID</th><th>Booking</th><th>Vessel</th><th>Komoditi</th><th>ETA</th><th>Status</th><th>Detail</th></tr></thead>
+          <tbody id="containerTable"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="section" id="sec-documents">
+      <div class="filter-bar">
+        <input class="search-input" id="docSearch" placeholder="🔍 Cari dokumen..." oninput="renderDocuments()">
+        <button class="btn btn-primary" onclick="openUploadDoc()">+ Upload Dokumen</button>
+      </div>
+      <div class="box">
+        <table class="data-table">
+          <thead><tr><th>ID</th><th>Kontainer</th><th>Tipe</th><th>Status</th><th>Tanggal</th><th>Catatan Operator</th><th>Aksi</th></tr></thead>
+          <tbody id="documentTable"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="section" id="sec-notifications">
+      <div class="box">
+        <div class="box-title">Notifikasi Saya <span id="unreadCount"></span>
+          <button class="btn btn-ghost btn-sm" onclick="markAllRead()">✓ Semua Dibaca</button>
+        </div>
+        <div id="notifList"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL: Detail -->
+<div class="modal-overlay" id="modalDetail">
+  <div class="modal" style="width:700px">
+    <h3 id="detailTitle">Detail</h3><p class="sub" id="detailSub"></p>
+    <div id="detailContent"></div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('modalDetail')">Tutup</button></div>
+  </div>
+</div>
+
+<!-- MODAL: Upload Doc -->
+<div class="modal-overlay" id="modalUpload">
+  <div class="modal" style="width:480px">
+    <h3>Upload Dokumen</h3><p class="sub">Submit dokumen ke operator untuk diverifikasi</p>
+    <div class="form-group"><label>Kontainer</label><select id="docContainer"></select></div>
+    <div class="form-group"><label>Tipe Dokumen</label>
+      <select id="docType"><option>Invoice</option><option>Packing List</option><option>Customs Declaration</option><option>Certificate of Origin</option><option>Bukti Pembayaran</option><option>Surat Izin</option></select>
+    </div>
+    <div class="form-group"><label>Upload File (PDF/JPG/PNG)</label><input type="file" id="docFile" accept=".pdf,.jpg,.jpeg,.png" style="padding:8px"></div>
+    <div class="form-group"><label>Catatan untuk Operator</label><textarea id="docNotes" placeholder="Keterangan tambahan..."></textarea></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modalUpload')">Batal</button>
+      <button class="btn btn-primary" onclick="saveDoc()">Submit ke Operator</button>
+    </div>
+  </div>
+</div>
+
+<script src="api-client.js"></script>
+<script>
+let currentUser, mapInstance=null;
+
+document.addEventListener('DOMContentLoaded', async () => {
+  const check = await API.check();
+  if (!check.authenticated || check.user.role !== 'stakeholder') { window.location.href='index.html'; return; }
+  currentUser = check.user;
+  document.getElementById('userName').textContent = currentUser.name;
+  document.getElementById('userInitial').textContent = currentUser.name[0];
+  await renderDashboard();
+  await updateBadges();
+  setAutoRefresh(async()=>{ await updateBadges(); });
+});
+
+const PAGE_TITLES={dashboard:['Dashboard','CMS › Dashboard'],tracking:['Live Tracking','CMS › Tracking'],containers:['Kontainer Saya','CMS › Kontainer'],documents:['Dokumen','CMS › Dokumen'],notifications:['Notifikasi','CMS › Notifikasi']};
+
+async function showSection(name) {
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('sec-'+name).classList.add('active');
+  document.querySelector(`.nav-item[onclick*="${name}"]`).classList.add('active');
+  const[t,b]=PAGE_TITLES[name];
+  document.getElementById('pageTitle').textContent=t; document.getElementById('pageBreadcrumb').textContent=b;
+  if(name==='tracking') await renderTracking();
+  if(name==='containers') await renderContainers();
+  if(name==='documents') await renderDocuments();
+  if(name==='notifications') await renderNotifications();
+}
+
+async function renderDashboard() {
+  const[stats,notifs,ctrs]=await Promise.all([API.getStats(),API.getNotifications(),API.getContainers()]);
+  document.getElementById('statGrid').innerHTML=`
+    <div class="stat-card" style="border-color:rgba(37,99,235,.3)"><div class="stat-label">Total Booking</div><div class="stat-value">${stats.total}</div><div class="stat-icon">📦</div></div>
+    <div class="stat-card" style="border-color:rgba(56,189,248,.3)"><div class="stat-label">In Transit</div><div class="stat-value" style="color:var(--cyan)">${stats.in_transit}</div><div class="stat-icon">🚢</div></div>
+    <div class="stat-card" style="border-color:rgba(16,185,129,.3)"><div class="stat-label">Selesai</div><div class="stat-value" style="color:var(--green)">${stats.completed}</div><div class="stat-icon">✅</div></div>
+    <div class="stat-card" style="border-color:rgba(239,68,68,.3)"><div class="stat-label">Dok Revisi</div><div class="stat-value" style="color:var(--red)">${stats.pending_docs}</div><div class="stat-icon">📋</div></div>
+    <div class="stat-card" style="border-color:rgba(245,158,11,.3)"><div class="stat-label">Notif Baru</div><div class="stat-value" style="color:var(--gold)">${stats.unread_notifs}</div><div class="stat-icon">🔔</div></div>
+  `;
+  const steps=['booking','gate_in','on_vessel','discharged','clearance','on_delivery','completed'];
+  document.getElementById('ctrCards').innerHTML=ctrs.map(c=>{
+    const s=STATUS_CONFIG[c.status]||{};
+    const idx=steps.indexOf(c.status);
+    return `<div class="ctr-card" onclick="viewDetail('${c.id}')">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <span class="mono">${c.id}</span>${statusBadge(c.status)}
+      </div>
+      <div style="font-size:11px;color:var(--gray)">${c.vessel} · ${c.origin}→${c.destination}</div>
+      <div style="font-size:10px;color:var(--gray);margin-top:2px">📍 ${c.position_desc}</div>
+      <div style="display:flex;gap:2px;margin-top:10px">
+        ${steps.map((st,i)=>`<div style="flex:1;height:4px;border-radius:2px;background:${i<idx?'var(--green)':i===idx?'var(--cyan)':'rgba(255,255,255,.1)'}"></div>`).join('')}
+      </div>
+    </div>`;
+  }).join('')||'<div style="color:var(--gray);font-size:12px;text-align:center;padding:30px">Belum ada kontainer</div>';
+
+  const nc={success:'#10b981',warning:'#f59e0b',danger:'#ef4444',info:'#38bdf8'};
+  document.getElementById('dashNotif').innerHTML=notifs.notifications.slice(0,4).map(n=>`
+    <div class="notif-item ${n.is_read?'':'unread'}">
+      <div class="notif-dot" style="background:${nc[n.type]||'#64748b'}"></div>
+      <div><div style="font-size:12px">${n.message}</div><div style="font-size:10px;color:var(--gray)">${formatDateTime(n.created_at)}</div></div>
+    </div>
+  `).join('')||'<div style="color:var(--gray);font-size:12px">Tidak ada notifikasi</div>';
+}
+
+async function renderTracking() {
+  const ctrs=await API.getContainers();
+  const active=ctrs.filter(c=>c.status!=='completed');
+  if(!mapInstance){
+    mapInstance=L.map('trackMap').setView([-7.2575,112.7521],8);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap'}).addTo(mapInstance);
+  } else {mapInstance.eachLayer(l=>{if(l instanceof L.Marker)l.remove();});}
+  active.forEach(c=>{
+    const s=STATUS_CONFIG[c.status]||{};
+    const icon=L.divIcon({html:`<div style="background:${s.color||'#2563eb'};color:white;padding:4px 10px;border-radius:20px;font-size:10px;font-weight:700;box-shadow:0 3px 10px rgba(0,0,0,.4)">${s.icon} ${c.id}</div>`,className:'',iconAnchor:[0,0]});
+    L.marker([parseFloat(c.position_lat)||(-7.2575),parseFloat(c.position_lng)||112.7521],{icon}).addTo(mapInstance).bindPopup(`<b>${c.id}</b><br>${c.vessel}<br>${c.position_desc}`);
+  });
+  const steps=[{key:'booking',label:'Booking'},{key:'gate_in',label:'Gate-In'},{key:'on_vessel',label:'Kapal'},{key:'discharged',label:'Bongkar'},{key:'clearance',label:'Clearance'},{key:'on_delivery',label:'Delivery'},{key:'completed',label:'Selesai'}];
+  document.getElementById('trackList').innerHTML=active.map(c=>{
+    const s=STATUS_CONFIG[c.status]||{};
+    const idx=steps.findIndex(st=>st.key===c.status);
+    return `<div style="padding:12px;border:1px solid var(--border);border-radius:12px;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span class="mono">${c.id}</span>${statusBadge(c.status)}</div>
+      <div style="font-size:11px;color:var(--gray)">📍 ${c.position_desc}</div>
+      <div style="display:flex;gap:2px;margin-top:8px">
+        ${steps.map((st,i)=>`<div style="flex:1;height:4px;border-radius:2px;background:${i<idx?'var(--green)':i===idx?'var(--cyan)':'rgba(255,255,255,.1)'}" title="${st.label}"></div>`).join('')}
+      </div>
+      <button class="btn btn-ghost btn-sm" style="margin-top:8px" onclick="viewDetail('${c.id}')">👁 Timeline</button>
+    </div>`;
+  }).join('')||'<div style="color:var(--gray);font-size:12px;text-align:center;padding:20px">Tidak ada kontainer aktif</div>';
+}
+
+async function renderContainers() {
+  const data=await API.getContainers({search:document.getElementById('ctrSearch').value});
+  document.getElementById('containerTable').innerHTML=data.map(c=>`
+    <tr><td class="mono">${c.id}</td>
+    <td style="font-size:11px;color:var(--gray)">${c.booking_no}</td>
+    <td style="font-size:11px">${c.vessel}</td>
+    <td style="font-size:11px">${c.commodity}<br><span style="color:var(--gray);font-size:10px">${c.type}</span></td>
+    <td style="font-size:11px">${formatDate(c.eta)}</td>
+    <td>${statusBadge(c.status)}</td>
+    <td><button class="btn btn-ghost btn-sm" onclick="viewDetail('${c.id}')">👁 Detail</button></td></tr>
+  `).join('')||`<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--gray)">Tidak ada kontainer</td></tr>`;
+}
+
+async function renderDocuments() {
+  const data=await API.getDocuments({search:document.getElementById('docSearch').value});
+  document.getElementById('documentTable').innerHTML=data.map(d=>`
+    <tr><td class="mono">${d.id}</td>
+    <td><span class="mono">${d.container_id}</span><br><span style="font-size:10px;color:var(--gray)">${d.vessel||''}</span></td>
+    <td style="font-size:12px">📄 ${d.type}</td>
+    <td>${docBadge(d.status)}</td>
+    <td style="font-size:11px;color:var(--gray)">${formatDateTime(d.created_at)}</td>
+    <td style="font-size:11px;max-width:180px">${d.status==='revision'?`<span style="color:var(--red)">⚠️ ${d.notes}</span>`:d.notes||'-'}</td>
+    <td>
+      ${d.filepath?`<a href="${d.filepath}" target="_blank" class="btn btn-ghost btn-sm">⬇️ Unduh</a>`:''}
+      ${d.status==='revision'?`<button class="btn btn-primary btn-sm" onclick="resubmit('${d.id}')">🔄 Resubmit</button>`:''}
+    </td></tr>
+  `).join('')||`<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--gray)">Tidak ada dokumen</td></tr>`;
+}
+
+async function resubmit(id) {
+  await API.updateDocument({id,status:'pending',notes:'Disubmit ulang oleh pengguna jasa'});
+  await renderDocuments(); alert('✅ Dokumen berhasil disubmit ulang ke operator');
+}
+
+async function openUploadDoc() {
+  const ctrs=await API.getContainers();
+  document.getElementById('docContainer').innerHTML=ctrs.map(c=>`<option value="${c.id}">${c.id} — ${c.vessel}</option>`).join('');
+  document.getElementById('docNotes').value='';
+  document.getElementById('modalUpload').classList.add('open');
+}
+
+async function saveDoc() {
+  const formData=new FormData();
+  formData.append('container_id',document.getElementById('docContainer').value);
+  formData.append('type',document.getElementById('docType').value);
+  formData.append('notes',document.getElementById('docNotes').value);
+  const f=document.getElementById('docFile');
+  if(f.files[0]) formData.append('file',f.files[0]);
+  const res=await fetch('api/documents.php',{method:'POST',credentials:'include',body:formData});
+  const data=await res.json();
+  if(data.error){alert(data.error);return;}
+  closeModal('modalUpload'); await renderDocuments(); await updateBadges();
+  alert('✅ Dokumen berhasil disubmit ke operator untuk diverifikasi!');
+}
+
+async function renderNotifications() {
+  const data=await API.getNotifications();
+  document.getElementById('unreadCount').textContent=`${data.unread_count} belum dibaca`;
+  const nc={success:'#10b981',warning:'#f59e0b',danger:'#ef4444',info:'#38bdf8'};
+  document.getElementById('notifList').innerHTML=data.notifications.map(n=>`
+    <div class="notif-item ${n.is_read?'':'unread'}" onclick="markRead('${n.id}')">
+      <div class="notif-dot" style="background:${nc[n.type]||'#64748b'}"></div>
+      <div style="flex:1"><div style="font-size:12px">${n.message}</div><div style="font-size:10px;color:var(--gray)">📦 ${n.container_id||'-'} · ${formatDateTime(n.created_at)}</div></div>
+      ${!n.is_read?'<span style="font-size:10px;color:var(--cyan)">BARU</span>':''}
+    </div>
+  `).join('')||'<div style="color:var(--gray);text-align:center;padding:30px">Tidak ada notifikasi</div>';
+}
+
+async function markRead(id){await API.markRead(id);await renderNotifications();await updateBadges();}
+async function markAllRead(){await API.markRead('all');await renderNotifications();await updateBadges();}
+
+async function viewDetail(id) {
+  const c=await API.getContainer(id);
+  const steps=[{key:'booking',icon:'📋',label:'Booking'},{key:'gate_in',icon:'🚪',label:'Gate-In'},{key:'on_vessel',icon:'🚢',label:'Di Kapal'},{key:'discharged',icon:'⬇️',label:'Dibongkar'},{key:'clearance',icon:'🔍',label:'Clearance'},{key:'on_delivery',icon:'🚛',label:'Delivery'},{key:'completed',icon:'✅',label:'Selesai'}];
+  const idx=steps.findIndex(s=>s.key===c.status);
+  document.getElementById('detailTitle').textContent=`Detail: ${c.id}`;
+  document.getElementById('detailSub').textContent=`${c.booking_no} · ${c.vessel} · ${c.origin}→${c.destination}`;
+  document.getElementById('detailContent').innerHTML=`
+    <div style="margin-bottom:12px">${statusBadge(c.status)} <span style="font-size:11px;color:var(--gray);margin-left:8px">📍 ${c.position_desc}</span></div>
+    <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+      ${[['Tipe',c.type],['Berat',Number(c.weight).toLocaleString()+' kg'],['Komoditi',c.commodity],['ETA',formatDate(c.eta)]].map(([l,v])=>`<div style="background:rgba(255,255,255,.04);border-radius:8px;padding:8px 12px;flex:1;min-width:110px"><div style="font-size:10px;color:var(--gray)">${l}</div><div style="font-size:12px;color:var(--white);font-weight:600">${v||'-'}</div></div>`).join('')}
+    </div>
+    <div style="font-size:12px;font-weight:700;color:var(--white);margin-bottom:10px">📍 Progress</div>
+    <div class="timeline">
+      ${steps.map((st,i)=>{
+        const done=i<idx, active=i===idx;
+        const ev=c.events?.find(e=>e.event.toLowerCase().includes(st.label.toLowerCase().split(' ')[0].toLowerCase()));
+        return `<div class="tl-item ${done?'done':active?'active':''}">
+          <div class="tl-event">${st.icon} ${st.label}</div>
+          ${ev?`<div class="tl-meta">${ev.actor} · ${formatDateTime(ev.timestamp)}</div>`:active?`<div class="tl-meta" style="color:var(--cyan)">Status saat ini</div>`:'<div class="tl-meta" style="color:var(--gray)">Menunggu...</div>'}
+        </div>`;
+      }).join('')}
+    </div>
+    <div style="font-size:12px;font-weight:700;color:var(--white);margin:14px 0 8px">📄 Dokumen</div>
+    ${(c.documents||[]).map(d=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px;background:rgba(255,255,255,.03);border-radius:8px;margin-bottom:5px">
+      <span style="font-size:12px">📄 ${d.type}</span>
+      <div style="display:flex;gap:6px;align-items:center">${docBadge(d.status)}${d.filepath?`<a href="${d.filepath}" target="_blank" class="btn btn-ghost btn-sm">⬇️</a>`:''}</div>
+    </div>`).join('')||'<div style="font-size:12px;color:var(--gray)">Belum ada dokumen</div>'}
+  `;
+  document.getElementById('modalDetail').classList.add('open');
+}
+
+async function updateBadges() {
+  const[stats,notifs]=await Promise.all([API.getStats(),API.getNotifications()]);
+  document.getElementById('nbDoc').textContent=stats.pending_docs;
+  document.getElementById('nbNotif').textContent=notifs.unread_count;
+  document.getElementById('notifCount').textContent=notifs.unread_count;
+}
+
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.modal-overlay').forEach(m=>{m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');});});
+</script>
+</body>
+</html>

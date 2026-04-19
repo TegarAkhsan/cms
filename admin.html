@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Admin — CMS Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+:root{
+  --bg:#080f1e;--bg2:#0d1729;--sidebar:#060d1a;--card:#0f1e35;
+  --border:rgba(255,255,255,.07);--blue:#1a4fd6;--cyan:#00d4ff;
+  --green:#10b981;--gold:#f59e0b;--red:#ef4444;--orange:#f97316;
+  --purple:#7c3aed;--gray:#64748b;--light:#94a3b8;--white:#f1f5f9;
+  --text:#cbd5e1;--font:'Space Grotesk',sans-serif;--mono:'JetBrains Mono',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex;min-height:100vh;}
+
+/* SIDEBAR */
+.sidebar{width:240px;min-height:100vh;background:var(--sidebar);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;z-index:100;}
+.sidebar-logo{padding:24px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;}
+.sidebar-logo .icon{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--blue),var(--cyan));display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.sidebar-logo .brand{font-size:16px;font-weight:700;color:var(--white);}
+.sidebar-logo .sub{font-size:10px;color:var(--gray);}
+.sidebar-nav{padding:12px 10px;flex:1;overflow-y:auto;}
+.nav-section{font-size:10px;color:var(--gray);text-transform:uppercase;letter-spacing:1px;font-weight:600;padding:12px 10px 6px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;cursor:pointer;transition:all .2s;font-size:13px;color:var(--light);margin-bottom:2px;border:none;background:none;width:100%;text-align:left;}
+.nav-item:hover{background:rgba(255,255,255,.05);color:var(--white);}
+.nav-item.active{background:rgba(26,79,214,.2);color:var(--cyan);border:1px solid rgba(0,212,255,.15);}
+.nav-item .ni{font-size:16px;width:20px;text-align:center;flex-shrink:0;}
+.nb{margin-left:auto;background:var(--red);color:white;border-radius:20px;padding:1px 7px;font-size:10px;font-weight:700;}
+.sidebar-footer{padding:16px;border-top:1px solid var(--border);}
+.user-card{display:flex;align-items:center;gap:10px;padding:10px;background:rgba(255,255,255,.04);border-radius:10px;}
+.user-avatar{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--gold),#d97706);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:white;flex-shrink:0;}
+.user-name{font-size:12px;font-weight:600;color:var(--white);}
+.user-role{font-size:10px;color:var(--gold);}
+.logout-btn{margin-left:auto;background:none;border:none;cursor:pointer;color:var(--gray);font-size:16px;}
+.logout-btn:hover{color:var(--red);}
+
+/* MAIN */
+.main{margin-left:240px;flex:1;display:flex;flex-direction:column;}
+.topbar{padding:16px 24px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
+.topbar h2{font-size:16px;font-weight:700;color:var(--white);}
+.breadcrumb{font-size:11px;color:var(--gray);}
+/* ① HAPUS notif & auto-refresh: topbar-right hanya tampilkan tanggal */
+.topbar-right{display:flex;align-items:center;gap:12px;}
+.date-display{font-size:11px;color:var(--gray);font-family:var(--mono);background:rgba(255,255,255,.04);padding:6px 12px;border-radius:8px;border:1px solid var(--border);}
+
+.content{padding:24px;flex:1;}
+.section{display:none;}.section.active{display:block;}
+
+/* STAT CARDS */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:16px;margin-bottom:24px;}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;position:relative;overflow:hidden;transition:transform .2s;}
+.stat-card:hover{transform:translateY(-3px);}
+.stat-label{font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:.8px;font-weight:600;margin-bottom:10px;}
+.stat-value{font-size:32px;font-weight:700;color:var(--white);font-family:var(--mono);line-height:1;margin-bottom:8px;}
+.stat-icon{position:absolute;bottom:14px;right:16px;font-size:28px;opacity:.4;}
+
+/* LAYOUT */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+.grid-3{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:16px;}
+.box{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:16px;}
+.box-title{font-size:13px;font-weight:700;color:var(--white);margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;}
+.box-title span{color:var(--gray);font-size:11px;font-weight:500;}
+
+/* TABLE */
+.data-table{width:100%;border-collapse:collapse;font-size:12px;}
+.data-table th{background:rgba(255,255,255,.04);padding:10px 12px;text-align:left;color:var(--gray);font-size:10px;text-transform:uppercase;letter-spacing:.8px;border-bottom:1px solid var(--border);}
+.data-table td{padding:11px 12px;border-bottom:1px solid rgba(255,255,255,.03);color:var(--text);vertical-align:middle;}
+.data-table tr:hover td{background:rgba(255,255,255,.02);}
+.mono{font-family:var(--mono);font-size:11px;color:var(--cyan);}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:600;white-space:nowrap;}
+
+/* BUTTONS */
+.btn{padding:8px 16px;border-radius:10px;border:none;cursor:pointer;font-family:var(--font);font-size:12px;font-weight:600;transition:all .2s;display:inline-flex;align-items:center;gap:6px;}
+.btn-primary{background:var(--blue);color:white;}.btn-primary:hover{background:#2563eb;}
+.btn-success{background:var(--green);color:white;}
+.btn-danger{background:var(--red);color:white;}
+.btn-warning{background:var(--gold);color:#000;}
+.btn-sm{padding:5px 10px;font-size:11px;border-radius:7px;}
+.btn-ghost{background:rgba(255,255,255,.06);color:var(--light);border:1px solid var(--border);}
+.btn-ghost:hover{background:rgba(255,255,255,.1);}
+
+/* FILTER BAR */
+.filter-bar{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 18px;margin-bottom:16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;}
+.filter-bar label{font-size:11px;color:var(--gray);font-weight:600;}
+.filter-bar select{background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:8px;padding:7px 10px;color:var(--white);font-family:var(--font);font-size:12px;outline:none;}
+.filter-bar select option{background:var(--bg2);}
+.search-input{padding:7px 12px;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:8px;color:var(--white);font-family:var(--font);font-size:12px;outline:none;width:220px;}
+.search-input::placeholder{color:var(--gray);}
+.search-input:focus,.filter-bar select:focus{border-color:var(--cyan);}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:999;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--bg2);border:1px solid var(--border);border-radius:20px;width:620px;max-width:95vw;max-height:90vh;overflow-y:auto;padding:28px;}
+.modal h3{font-size:17px;color:var(--white);margin-bottom:6px;}
+.modal .sub{font-size:12px;color:var(--gray);margin-bottom:22px;}
+.modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--border);}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+.form-group{margin-bottom:14px;}
+.form-group label{display:block;font-size:11px;color:var(--gray);font-weight:600;text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px;}
+.form-group input,.form-group select,.form-group textarea{width:100%;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:10px;padding:10px 12px;color:var(--white);font-family:var(--font);font-size:13px;outline:none;transition:all .2s;}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--cyan);}
+.form-group select option{background:var(--bg2);}
+.form-group textarea{resize:vertical;min-height:80px;}
+
+/* ② Style khusus input ID auto-generate */
+.input-autofill{background:rgba(0,212,255,.06)!important;border-color:rgba(0,212,255,.3)!important;color:var(--cyan)!important;font-family:var(--mono)!important;cursor:default;}
+.auto-hint{font-size:10px;color:var(--cyan);margin-top:4px;font-family:var(--mono);}
+
+/* NOTIF */
+.notif-item{display:flex;gap:12px;padding:12px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px;margin-bottom:8px;cursor:pointer;}
+.notif-item.unread{border-color:rgba(0,212,255,.2);background:rgba(0,212,255,.04);}
+.notif-dot{width:8px;height:8px;border-radius:50%;margin-top:4px;flex-shrink:0;}
+
+/* TIMELINE */
+.timeline{position:relative;padding-left:20px;}
+.timeline::before{content:'';position:absolute;left:6px;top:6px;bottom:6px;width:2px;background:var(--border);}
+.tl-item{position:relative;padding:0 0 18px 20px;}
+.tl-item::before{content:'';position:absolute;left:-8px;top:4px;width:12px;height:12px;border-radius:50%;border:2px solid var(--border);background:var(--bg2);}
+.tl-item.done::before{background:var(--green);border-color:var(--green);}
+.tl-item.active::before{background:var(--cyan);border-color:var(--cyan);box-shadow:0 0 8px var(--cyan);}
+.tl-event{font-size:12px;font-weight:600;color:var(--white);}
+.tl-meta{font-size:10px;color:var(--gray);margin-top:2px;}
+
+/* MAP */
+#adminMap{height:340px;border-radius:12px;}
+.map-legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;}
+.map-legend-item{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--gray);}
+.map-legend-dot{width:10px;height:10px;border-radius:50%;}
+
+/* ③ Animasi marker pindah */
+@keyframes markerPulse{0%,100%{transform:scale(1);}50%{transform:scale(1.15);}}
+.marker-updated{animation:markerPulse .6s ease 3;}
+
+.progress-wrap{background:rgba(255,255,255,.08);border-radius:20px;height:6px;overflow:hidden;}
+.progress-fill{height:100%;border-radius:20px;transition:width .5s ease;}
+::-webkit-scrollbar{width:6px;}::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:3px;}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;z-index:9999;background:#1e293b;border-radius:12px;padding:14px 20px;color:var(--white);font-size:13px;box-shadow:0 8px 32px rgba(0,0,0,.4);animation:slideUp .3s ease;display:flex;align-items:center;gap:10px;}
+@keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <div class="icon">⚓</div>
+    <div><div class="brand">CMS</div><div class="sub">Admin Panel</div></div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section">Utama</div>
+    <button class="nav-item active" onclick="showSection('dashboard')"><span class="ni">📊</span> Dashboard</button>
+    <button class="nav-item" onclick="showSection('containers')"><span class="ni">📦</span> Kontainer <span class="nb" id="nbContainer">0</span></button>
+    <button class="nav-item" onclick="showSection('documents')"><span class="ni">📄</span> Dokumen <span class="nb" id="nbDoc">0</span></button>
+    <button class="nav-item" onclick="showSection('tracking')"><span class="ni">🗺️</span> Live Tracking</button>
+    <div class="nav-section">Manajemen</div>
+    <button class="nav-item" onclick="showSection('users')"><span class="ni">👥</span> Pengguna</button>
+    <button class="nav-item" onclick="showSection('notifications')"><span class="ni">🔔</span> Notifikasi</button>
+    <button class="nav-item" onclick="showSection('reports')"><span class="ni">📈</span> Laporan</button>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="user-avatar" id="userInitial">A</div>
+      <div><div class="user-name" id="userName">Admin</div><div class="user-role">Administrator</div></div>
+      <button class="logout-btn" onclick="doLogout()">⏻</button>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+  <!-- ① TOPBAR: hapus notif & auto-refresh, hanya tampilkan judul + tanggal -->
+  <div class="topbar">
+    <div>
+      <h2 id="pageTitle">Dashboard Admin</h2>
+      <div class="breadcrumb" id="pageBreadcrumb">CMS › Dashboard</div>
+    </div>
+    <div class="topbar-right">
+      <div class="date-display" id="dateDisplay">-</div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div class="section active" id="sec-dashboard">
+      <div class="stat-grid" id="statGrid"></div>
+      <div class="grid-2">
+        <div class="box"><div class="box-title">Pergerakan Kontainer <span>12 Bulan Terakhir</span></div><canvas id="movChart" style="max-height:220px"></canvas></div>
+        <div class="box"><div class="box-title">Distribusi Status</div><canvas id="statusChart" style="max-height:220px"></canvas></div>
+      </div>
+      <div class="grid-3">
+        <div class="box"><div class="box-title">Kontainer Terbaru</div>
+          <table class="data-table"><thead><tr><th>ID</th><th>Vessel</th><th>Rute</th><th>Status</th></tr></thead><tbody id="recentTable"></tbody></table>
+        </div>
+        <div class="box"><div class="box-title">Notifikasi Terbaru</div><div id="dashNotifList"></div></div>
+      </div>
+    </div>
+
+    <!-- CONTAINERS -->
+    <div class="section" id="sec-containers">
+      <div class="filter-bar">
+        <input class="search-input" id="ctrSearch" placeholder="🔍 Cari ID, vessel, komoditi..." oninput="renderContainers()">
+        <label>Status:</label>
+        <select id="ctrFilter" onchange="renderContainers()">
+          <option value="">Semua Status</option>
+          <option value="booking">Booking</option>
+          <option value="gate_in">Gate-In Terminal</option>
+          <option value="on_vessel">Di Atas Kapal</option>
+          <option value="discharged">Dibongkar</option>
+          <option value="clearance">Clearance</option>
+          <option value="on_delivery">Dalam Pengiriman</option>
+          <option value="completed">Selesai</option>
+        </select>
+        <button class="btn btn-primary" onclick="openAddContainer()">+ Tambah Kontainer</button>
+      </div>
+      <div class="box">
+        <table class="data-table">
+          <thead><tr><th>ID</th><th>Booking</th><th>Vessel</th><th>Rute</th><th>Komoditi</th><th>Status</th><th>Lokasi</th><th>Aksi</th></tr></thead>
+          <tbody id="containerTable"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- DOCUMENTS -->
+    <div class="section" id="sec-documents">
+      <div class="filter-bar">
+        <input class="search-input" id="docSearch" placeholder="🔍 Cari dokumen..." oninput="renderDocuments()">
+        <label>Status:</label>
+        <select id="docFilter" onchange="renderDocuments()">
+          <option value="">Semua</option>
+          <option value="pending">Pending</option>
+          <option value="approved">Disetujui</option>
+          <option value="revision">Revisi</option>
+        </select>
+      </div>
+      <div class="box">
+        <table class="data-table">
+          <thead><tr><th>ID</th><th>Kontainer</th><th>Tipe</th><th>Status</th><th>Tanggal</th><th>Catatan</th><th>Aksi</th></tr></thead>
+          <tbody id="documentTable"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TRACKING -->
+    <div class="section" id="sec-tracking">
+      <div class="grid-3">
+        <div class="box">
+          <div class="box-title">Peta Live Tracking <span id="mapLastUpdate"></span></div>
+          <div id="adminMap"></div>
+          <div class="map-legend" id="mapLegend"></div>
+        </div>
+        <div class="box">
+          <div class="box-title">Kontainer Aktif <span id="activeCount"></span></div>
+          <div id="trackingList" style="max-height:380px;overflow-y:auto"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- USERS -->
+    <div class="section" id="sec-users">
+      <div class="filter-bar">
+        <button class="btn btn-primary" onclick="openAddUser()">+ Tambah Pengguna</button>
+      </div>
+      <div class="box">
+        <table class="data-table">
+          <thead><tr><th>ID</th><th>Nama</th><th>Username</th><th>Role</th><th>Email</th><th>Port/Perusahaan</th><th>Aksi</th></tr></thead>
+          <tbody id="userTable"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- NOTIFICATIONS -->
+    <div class="section" id="sec-notifications">
+      <div class="box">
+        <div class="box-title">Semua Notifikasi <span id="unreadCount"></span>
+          <button class="btn btn-ghost btn-sm" onclick="markAllRead()">✓ Tandai Semua Dibaca</button>
+        </div>
+        <div id="notifList"></div>
+      </div>
+    </div>
+
+    <!-- REPORTS -->
+    <div class="section" id="sec-reports">
+      <div class="stat-grid" id="reportStats"></div>
+      <div class="grid-2">
+        <div class="box"><div class="box-title">Status Kontainer</div><canvas id="reportChart" style="max-height:250px"></canvas></div>
+        <div class="box"><div class="box-title">Performa Vessel</div><div id="vesselPerf"></div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════════════════ MODALS ════════════════ -->
+
+<!-- MODAL: Tambah/Edit Kontainer -->
+<div class="modal-overlay" id="modalContainer">
+  <div class="modal">
+    <h3 id="modalContainerTitle">Tambah Kontainer</h3>
+    <p class="sub">Data kontainer yang akan dimonitor dalam sistem</p>
+
+    <!-- ② ID & Booking otomatis -->
+    <div class="form-row">
+      <div class="form-group">
+        <label>ID Kontainer <span style="color:var(--cyan);font-size:9px">● Otomatis</span></label>
+        <input id="f_id" class="input-autofill" readonly placeholder="Otomatis...">
+        <div class="auto-hint" id="hint_id"></div>
+      </div>
+      <div class="form-group">
+        <label>Booking No <span style="color:var(--cyan);font-size:9px">● Otomatis</span></label>
+        <input id="f_booking" class="input-autofill" readonly placeholder="Otomatis...">
+        <div class="auto-hint" id="hint_bk"></div>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Nama Vessel</label><input id="f_vessel" placeholder="KM. Nusantara Jaya"></div>
+      <div class="form-group"><label>Voyage</label><input id="f_voyage" placeholder="NJ-2026-03"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Asal</label><input id="f_origin" placeholder="Jakarta"></div>
+      <div class="form-group"><label>Tujuan</label><input id="f_dest" placeholder="Surabaya"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Tipe Kontainer</label>
+        <select id="f_type">
+          <option>20ft Dry</option><option>40ft Dry</option>
+          <option>20ft Reefer</option><option>40ft Reefer</option><option>40ft HC</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Berat (kg)</label><input id="f_weight" type="number" placeholder="18500"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Komoditi</label><input id="f_commodity" placeholder="Elektronik, Tekstil..."></div>
+      <div class="form-group"><label>ETA</label><input id="f_eta" type="date"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Status Awal</label>
+        <select id="f_status">
+          <option value="booking">📋 Booking</option>
+          <option value="gate_in">🚪 Gate-In Terminal</option>
+          <option value="on_vessel">🚢 Di Atas Kapal</option>
+          <option value="discharged">⬇️ Dibongkar</option>
+          <option value="clearance">🔍 Clearance</option>
+          <option value="on_delivery">🚛 Dalam Pengiriman</option>
+          <option value="completed">✅ Selesai</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Pemilik (Stakeholder)</label><select id="f_owner"></select></div>
+    </div>
+    <div class="form-group"><label>Deskripsi Posisi</label><input id="f_pos_desc" placeholder="Yard A-12, Tanjung Perak"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modalContainer')">Batal</button>
+      <button class="btn btn-primary" id="btnSaveContainer" onclick="saveContainer()">💾 Simpan Kontainer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Detail Kontainer -->
+<div class="modal-overlay" id="modalDetail">
+  <div class="modal" style="width:700px">
+    <h3 id="detailTitle">Detail Kontainer</h3>
+    <p class="sub" id="detailSub"></p>
+    <div id="detailContent"></div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('modalDetail')">Tutup</button></div>
+  </div>
+</div>
+
+<!-- MODAL: Status Dokumen -->
+<div class="modal-overlay" id="modalDocStatus">
+  <div class="modal" style="width:440px">
+    <h3>Update Status Dokumen</h3>
+    <p class="sub" id="docStatusSub"></p>
+    <div class="form-group"><label>Status Baru</label>
+      <select id="newDocStatus">
+        <option value="approved">✅ Disetujui</option>
+        <option value="revision">❌ Perlu Revisi</option>
+        <option value="pending">⏳ Pending</option>
+      </select>
+    </div>
+    <div class="form-group"><label>Catatan untuk Pengguna</label>
+      <textarea id="docStatusNote" placeholder="Catatan akan dikirim ke stakeholder..."></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modalDocStatus')">Batal</button>
+      <button class="btn btn-primary" onclick="saveDocStatus()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Tambah/Edit Pengguna -->
+<div class="modal-overlay" id="modalUser">
+  <div class="modal" style="width:480px">
+    <h3 id="modalUserTitle">Tambah Pengguna</h3>
+    <p class="sub">Data akun pengguna sistem CMS</p>
+    <div class="form-row">
+      <div class="form-group"><label>Username</label><input id="u_username" placeholder="contoh: operator3"></div>
+      <div class="form-group"><label>Password</label><input id="u_password" type="password" placeholder="Kosongkan jika tidak ganti"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Nama Lengkap</label><input id="u_name" placeholder="Nama lengkap"></div>
+      <div class="form-group"><label>Role</label>
+        <select id="u_role">
+          <option value="admin">Admin</option>
+          <option value="operator">Operator</option>
+          <option value="stakeholder" selected>Stakeholder</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Email</label><input id="u_email" type="email" placeholder="email@contoh.com"></div>
+      <div class="form-group"><label>Port / Perusahaan</label><input id="u_port" placeholder="Tanjung Perak / PT. XYZ"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modalUser')">Batal</button>
+      <button class="btn btn-primary" onclick="saveUser()">💾 Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════ SCRIPTS ════════════════ -->
+<script src="api-client.js"></script>
+<script>
+// ── STATE ─────────────────────────────────────────────────
+let currentUser   = null;
+let mapInstance   = null;
+let mapMarkers    = {}; // { 'CTR001': L.marker }
+let movChart, stChart, rptChart;
+let editingCtr    = null;
+let editingDoc    = null;
+let editingUser   = null;
+
+// ── INIT ──────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', async () => {
+  const check = await API.check();
+  if (!check.authenticated || check.user.role !== 'admin') {
+    window.location.href = 'index.html'; return;
+  }
+  currentUser = check.user;
+  document.getElementById('userName').textContent    = currentUser.name;
+  document.getElementById('userInitial').textContent = currentUser.name[0].toUpperCase();
+  document.getElementById('dateDisplay').textContent =
+    new Date().toLocaleDateString('id-ID',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
+
+  await renderDashboard();
+  await updateBadges();
+
+  // Auto-refresh setiap 30 detik (background only, tanpa tampilkan countdown)
+  setInterval(async () => {
+    await updateBadges();
+    // Jika di halaman tracking, refresh marker peta
+    if (document.getElementById('sec-tracking').classList.contains('active')) {
+      await refreshMapMarkers();
+    }
+  }, 30000);
+});
+
+// ── NAVIGASI ──────────────────────────────────────────────
+const PAGE_TITLES = {
+  dashboard:     ['Dashboard Admin',        'CMS › Dashboard'],
+  containers:    ['Manajemen Kontainer',    'CMS › Kontainer'],
+  documents:     ['Manajemen Dokumen',      'CMS › Dokumen'],
+  tracking:      ['Live Tracking',          'CMS › Live Tracking'],
+  users:         ['Manajemen Pengguna',     'CMS › Pengguna'],
+  notifications: ['Notifikasi Sistem',      'CMS › Notifikasi'],
+  reports:       ['Laporan & Statistik',    'CMS › Laporan'],
+};
+
+async function showSection(name) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('sec-' + name).classList.add('active');
+  document.querySelector(`.nav-item[onclick*="${name}"]`).classList.add('active');
+  const [t, b] = PAGE_TITLES[name];
+  document.getElementById('pageTitle').textContent    = t;
+  document.getElementById('pageBreadcrumb').textContent = b;
+
+  if (name === 'containers')    await renderContainers();
+  if (name === 'documents')     await renderDocuments();
+  if (name === 'tracking')      await renderTracking();
+  if (name === 'users')         await renderUsers();
+  if (name === 'notifications') await renderNotifications();
+  if (name === 'reports')       await renderReports();
+}
+
+// ── DASHBOARD ─────────────────────────────────────────────
+async function renderDashboard() {
+  const [stats, notifs, ctrs] = await Promise.all([
+    API.getStats(), API.getNotifications(), API.getContainers()
+  ]);
+
+  document.getElementById('statGrid').innerHTML = `
+    <div class="stat-card"><div class="stat-label">Total Kontainer</div><div class="stat-value">${stats.total}</div><div class="stat-icon">📦</div></div>
+    <div class="stat-card"><div class="stat-label">In Transit</div><div class="stat-value" style="color:var(--cyan)">${stats.in_transit}</div><div class="stat-icon">🚢</div></div>
+    <div class="stat-card"><div class="stat-label">Selesai</div><div class="stat-value" style="color:var(--green)">${stats.completed}</div><div class="stat-icon">✅</div></div>
+    <div class="stat-card"><div class="stat-label">Dok Pending</div><div class="stat-value" style="color:var(--gold)">${stats.pending_docs}</div><div class="stat-icon">📄</div></div>
+    <div class="stat-card"><div class="stat-label">Notif Baru</div><div class="stat-value" style="color:var(--red)">${stats.unread_notifs}</div><div class="stat-icon">🔔</div></div>
+  `;
+
+  // Chart pergerakan
+  const ctx1 = document.getElementById('movChart').getContext('2d');
+  if (movChart) movChart.destroy();
+  movChart = new Chart(ctx1, {
+    type: 'line',
+    data: {
+      labels: (stats.monthly_data||[]).map(m => m.month),
+      datasets: [{ label:'Kontainer', data:(stats.monthly_data||[]).map(m=>m.total),
+        borderColor:'#00d4ff', backgroundColor:'rgba(0,212,255,.08)', fill:true, tension:0.4 }]
+    },
+    options: { responsive:true, plugins:{legend:{labels:{color:'#94a3b8',font:{size:10}}}},
+      scales:{ x:{ticks:{color:'#64748b'}}, y:{ticks:{color:'#64748b',stepSize:1}} } }
+  });
+
+  // Chart donut status
+  const ctx2 = document.getElementById('statusChart').getContext('2d');
+  if (stChart) stChart.destroy();
+  const by = stats.by_status || {};
+  stChart = new Chart(ctx2, {
+    type: 'doughnut',
+    data: {
+      labels: Object.keys(by).map(k => STATUS_CONFIG[k]?.label || k),
+      datasets: [{ data: Object.values(by),
+        backgroundColor:['#6366f1','#0891b2','#2563eb','#f59e0b','#d97706','#7c3aed','#10b981','#ef4444'] }]
+    },
+    options: { responsive:true, plugins:{legend:{position:'right',labels:{color:'#94a3b8',font:{size:10}}}} }
+  });
+
+  // Tabel kontainer terbaru
+  document.getElementById('recentTable').innerHTML = ctrs.slice(0,5).map(c =>
+    `<tr><td class="mono">${c.id}</td><td style="font-size:11px">${c.vessel}</td>
+    <td style="font-size:10px;color:var(--gray)">${c.origin}→${c.destination}</td>
+    <td>${statusBadge(c.status)}</td></tr>`
+  ).join('');
+
+  // Notif terbaru
+  const nc = {success:'#10b981',warning:'#f59e0b',danger:'#ef4444',info:'#00d4ff'};
+  document.getElementById('dashNotifList').innerHTML = (notifs.notifications||[]).slice(0,5).map(n =>
+    `<div class="notif-item ${n.is_read?'':'unread'}">
+      <div class="notif-dot" style="background:${nc[n.type]||'#64748b'}"></div>
+      <div><div style="font-size:12px">${n.message}</div>
+      <div style="font-size:10px;color:var(--gray)">${formatDateTime(n.created_at)}</div></div>
+    </div>`
+  ).join('') || '<div style="color:var(--gray);font-size:12px;text-align:center;padding:16px">Tidak ada notifikasi</div>';
+}
+
+// ── CONTAINERS ────────────────────────────────────────────
+async function renderContainers() {
+  const data = await API.getContainers({
+    search: document.getElementById('ctrSearch').value,
+    status: document.getElementById('ctrFilter').value,
+  });
+  document.getElementById('containerTable').innerHTML = data.map(c =>
+    `<tr>
+      <td class="mono">${c.id}</td>
+      <td style="font-size:11px;color:var(--gray)">${c.booking_no}</td>
+      <td style="font-size:11px">${c.vessel}<br><span style="color:var(--gray);font-size:10px">${c.voyage}</span></td>
+      <td style="font-size:11px">${c.origin}→${c.destination}</td>
+      <td style="font-size:11px">${c.commodity}<br><span style="color:var(--gray);font-size:10px">${c.type}</span></td>
+      <td>${statusBadge(c.status)}</td>
+      <td style="font-size:10px;color:var(--gray);max-width:130px">${c.position_desc}</td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-ghost btn-sm" onclick="viewDetail('${c.id}')">👁</button>
+        <button class="btn btn-primary btn-sm" onclick="openEditContainer('${c.id}')">✏️</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteContainer('${c.id}')">🗑</button>
+      </td>
+    </tr>`
+  ).join('') || `<tr><td colspan="8" style="text-align:center;padding:30px;color:var(--gray)">Tidak ada data kontainer</td></tr>`;
+}
+
+// ② AUTO-GENERATE ID & BOOKING NO saat Tambah Kontainer
+async function openAddContainer() {
+  editingCtr = null;
+  document.getElementById('modalContainerTitle').textContent = 'Tambah Kontainer Baru';
+  document.getElementById('btnSaveContainer').textContent = '💾 Simpan Kontainer';
+
+  // Generate ID otomatis: ambil nomor terbesar + 1
+  const ctrs   = await API.getContainers();
+  const nums   = ctrs.map(c => parseInt(c.id.replace(/\D/g,''))).filter(n => !isNaN(n));
+  const nextN  = nums.length > 0 ? Math.max(...nums) + 1 : 1;
+  const newId  = 'CTR' + String(nextN).padStart(3,'0');
+
+  // Generate Booking No otomatis
+  const yr     = new Date().getFullYear();
+  const bkNums = ctrs.map(c => parseInt((c.booking_no||'').replace(/\D/g,''))).filter(n=>!isNaN(n));
+  const bkNext = bkNums.length > 0 ? Math.max(...bkNums) + 1 : 1;
+  const newBk  = `BK-${yr}-${String(bkNext).padStart(4,'0')}`;
+
+  document.getElementById('f_id').value      = newId;
+  document.getElementById('f_booking').value = newBk;
+  document.getElementById('hint_id').textContent = `→ ID berikutnya setelah ${ctrs.length} kontainer`;
+  document.getElementById('hint_bk').textContent = `→ Nomor booking tahun ${yr}`;
+
+  // Reset field lainnya
+  ['f_vessel','f_voyage','f_origin','f_dest','f_commodity','f_pos_desc'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('f_weight').value = '';
+  document.getElementById('f_eta').value    = '';
+  document.getElementById('f_status').value = 'booking';
+
+  // Buat field ID & booking readonly (tidak bisa diubah manual)
+  document.getElementById('f_id').readOnly      = true;
+  document.getElementById('f_booking').readOnly = true;
+
+  await loadOwners();
+  document.getElementById('modalContainer').classList.add('open');
+}
+
+async function openEditContainer(id) {
+  editingCtr = id;
+  document.getElementById('modalContainerTitle').textContent = `Edit Kontainer: ${id}`;
+  document.getElementById('btnSaveContainer').textContent    = '💾 Update Kontainer';
+
+  const c = await API.getContainer(id);
+  if (!c) return;
+
+  document.getElementById('f_id').value        = c.id;
+  document.getElementById('f_booking').value   = c.booking_no;
+  document.getElementById('f_vessel').value    = c.vessel;
+  document.getElementById('f_voyage').value    = c.voyage;
+  document.getElementById('f_origin').value    = c.origin;
+  document.getElementById('f_dest').value      = c.destination;
+  document.getElementById('f_type').value      = c.type;
+  document.getElementById('f_weight').value    = c.weight;
+  document.getElementById('f_commodity').value = c.commodity;
+  document.getElementById('f_eta').value       = c.eta ? c.eta.split('T')[0] : '';
+  document.getElementById('f_status').value    = c.status;
+  document.getElementById('f_pos_desc').value  = c.position_desc;
+  document.getElementById('hint_id').textContent = '';
+  document.getElementById('hint_bk').textContent = '';
+
+  // Saat edit, ID tidak bisa diubah
+  document.getElementById('f_id').readOnly      = true;
+  document.getElementById('f_booking').readOnly = false;
+
+  await loadOwners(c.owner_id);
+  document.getElementById('modalContainer').classList.add('open');
+}
+
+async function loadOwners(selectedId = null) {
+  const users = await API.getUsers('stakeholder');
+  document.getElementById('f_owner').innerHTML = (users||[]).map(u =>
+    `<option value="${u.id}" ${u.id == selectedId ? 'selected':''}>${u.name} (${u.username})</option>`
+  ).join('');
+}
+
+async function saveContainer() {
+  const id = document.getElementById('f_id').value.trim();
+  if (!id) { showToast('ID Kontainer wajib diisi!','error'); return; }
+
+  const data = {
+    id,
+    booking_no:   document.getElementById('f_booking').value,
+    vessel:       document.getElementById('f_vessel').value,
+    voyage:       document.getElementById('f_voyage').value,
+    origin:       document.getElementById('f_origin').value,
+    destination:  document.getElementById('f_dest').value,
+    type:         document.getElementById('f_type').value,
+    weight:       parseInt(document.getElementById('f_weight').value)||0,
+    commodity:    document.getElementById('f_commodity').value,
+    eta:          document.getElementById('f_eta').value || null,
+    status:       document.getElementById('f_status').value,
+    owner_id:     parseInt(document.getElementById('f_owner').value)||null,
+    operator_id:  2,
+    position_lat: -7.2575,
+    position_lng: 112.7521,
+    position_desc: document.getElementById('f_pos_desc').value,
+  };
+
+  const res = editingCtr ? await API.updateContainer(data) : await API.createContainer(data);
+  if (res.error) { showToast(res.error, 'error'); return; }
+
+  closeModal('modalContainer');
+  await renderContainers();
+  await updateBadges();
+  showToast(editingCtr ? `✅ Kontainer ${id} berhasil diupdate!` : `✅ Kontainer ${id} berhasil ditambahkan!`);
+}
+
+async function deleteContainer(id) {
+  if (!confirm(`Hapus kontainer ${id}?\n\nSemua data terkait (dokumen, timeline, notifikasi) akan ikut terhapus.`)) return;
+  const res = await API.deleteContainer(id);
+  if (res.error) { showToast(res.error,'error'); return; }
+  await renderContainers();
+  await updateBadges();
+  showToast(`🗑️ Kontainer ${id} berhasil dihapus`);
+}
+
+async function viewDetail(id) {
+  const c = await API.getContainer(id);
+  if (!c) return;
+  document.getElementById('detailTitle').textContent = `Detail: ${c.id}`;
+  document.getElementById('detailSub').textContent   = `${c.booking_no} · ${c.vessel} · ${c.origin}→${c.destination}`;
+  document.getElementById('detailContent').innerHTML = `
+    <div style="margin-bottom:10px">${statusBadge(c.status)} <span style="font-size:11px;color:var(--gray);margin-left:8px">📍 ${c.position_desc}</span></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
+      ${[['Tipe',c.type],['Berat',Number(c.weight).toLocaleString()+' kg'],['Komoditi',c.commodity],['ETA',formatDate(c.eta)],['Pemilik',c.owner_name||'-'],['Operator',c.operator_name||'-']]
+        .map(([l,v])=>`<div style="background:rgba(255,255,255,.03);border-radius:8px;padding:8px 12px">
+          <div style="font-size:10px;color:var(--gray)">${l}</div>
+          <div style="font-size:12px;color:var(--white);font-weight:600">${v||'-'}</div></div>`).join('')}
+    </div>
+    <div style="font-size:12px;font-weight:700;color:var(--white);margin-bottom:8px">📄 Dokumen (${(c.documents||[]).length})</div>
+    ${(c.documents||[]).map(d=>`<div style="display:flex;justify-content:space-between;padding:8px;background:rgba(255,255,255,.03);border-radius:8px;margin-bottom:5px">
+      <span style="font-size:12px">📄 ${d.type}</span>${docBadge(d.status)}</div>`).join('')
+      || '<div style="font-size:12px;color:var(--gray);margin-bottom:10px">Belum ada dokumen</div>'}
+    <div style="font-size:12px;font-weight:700;color:var(--white);margin:12px 0 8px">📍 Timeline</div>
+    <div class="timeline">${(c.events||[]).map((e,i,a)=>
+      `<div class="tl-item ${i===a.length-1?'active':'done'}">
+        <div class="tl-event">${e.event}</div>
+        <div class="tl-meta">${e.actor} · ${formatDateTime(e.timestamp)}</div>
+        ${e.note?`<div style="font-size:10px;color:var(--gray)">${e.note}</div>`:''}
+      </div>`).join('')}</div>`;
+  document.getElementById('modalDetail').classList.add('open');
+}
+
+// ── DOCUMENTS ─────────────────────────────────────────────
+async function renderDocuments() {
+  const data = await API.getDocuments({
+    search: document.getElementById('docSearch').value,
+    status: document.getElementById('docFilter').value,
+  });
+  document.getElementById('documentTable').innerHTML = data.map(d =>
+    `<tr>
+      <td class="mono">${d.id}</td>
+      <td><span class="mono">${d.container_id}</span><br><span style="font-size:10px;color:var(--gray)">${d.vessel||''}</span></td>
+      <td style="font-size:12px">📄 ${d.type}</td>
+      <td>${docBadge(d.status)}</td>
+      <td style="font-size:11px;color:var(--gray)">${formatDateTime(d.created_at)}</td>
+      <td style="font-size:11px;max-width:160px">${d.notes||'-'}</td>
+      <td><button class="btn btn-ghost btn-sm" onclick="openDocStatus('${d.id}','${d.status}','${d.type}')">✏️ Update</button></td>
+    </tr>`
+  ).join('') || `<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--gray)">Tidak ada dokumen</td></tr>`;
+}
+
+function openDocStatus(id, status, type) {
+  editingDoc = id;
+  document.getElementById('docStatusSub').textContent  = `Dokumen: ${type} (${id})`;
+  document.getElementById('newDocStatus').value         = status;
+  document.getElementById('docStatusNote').value        = '';
+  document.getElementById('modalDocStatus').classList.add('open');
+}
+
+async function saveDocStatus() {
+  const res = await API.updateDocument({
+    id: editingDoc,
+    status: document.getElementById('newDocStatus').value,
+    notes:  document.getElementById('docStatusNote').value,
+  });
+  if (res.error) { showToast(res.error,'error'); return; }
+  closeModal('modalDocStatus');
+  await renderDocuments();
+  await updateBadges();
+  showToast('✅ Status dokumen berhasil diupdate!');
+}
+
+// ③ LIVE TRACKING — marker bergerak saat status/posisi berubah
+async function renderTracking() {
+  // Inisialisasi peta hanya sekali
+  if (!mapInstance) {
+    mapInstance = L.map('adminMap').setView([-7.2575, 112.7521], 9);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap'
+    }).addTo(mapInstance);
+  }
+
+  await refreshMapMarkers();
+
+  // Auto-refresh peta setiap 15 detik saat halaman tracking aktif
+  if (!window._trackInterval) {
+    window._trackInterval = setInterval(async () => {
+      if (document.getElementById('sec-tracking').classList.contains('active')) {
+        await refreshMapMarkers();
+      }
+    }, 15000);
+  }
+}
+
+// Fungsi update marker peta — marker BERPINDAH saat status berubah
+async function refreshMapMarkers() {
+  const containers = await API.getContainers();
+  const active     = containers.filter(c => c.status !== 'completed');
+  const activeIds  = active.map(c => c.id);
+
+  // Hapus marker kontainer yang sudah selesai/dihapus
+  Object.keys(mapMarkers).forEach(id => {
+    if (!activeIds.includes(id)) {
+      mapMarkers[id].remove();
+      delete mapMarkers[id];
+    }
+  });
+
+  active.forEach(c => {
+    const s   = STATUS_CONFIG[c.status] || { label: c.status, color:'#64748b', icon:'📦' };
+    const lat = parseFloat(c.position_lat) || -7.2575;
+    const lng = parseFloat(c.position_lng) || 112.7521;
+
+    const iconHtml = `
+      <div style="background:${s.color};color:white;padding:4px 10px;border-radius:20px;
+        font-size:10px;font-weight:700;white-space:nowrap;
+        box-shadow:0 3px 10px rgba(0,0,0,.4);border:2px solid rgba(255,255,255,.3)">
+        ${s.icon} ${c.id}
+      </div>`;
+    const icon = L.divIcon({ html: iconHtml, className:'', iconAnchor:[0,0] });
+
+    const popup = `<div style="font-family:sans-serif;min-width:180px">
+      <div style="font-weight:700;font-size:13px;margin-bottom:6px">📦 ${c.id}</div>
+      <div style="font-size:11px;color:#555;margin-bottom:2px">🚢 ${c.vessel}</div>
+      <div style="font-size:11px;color:#555;margin-bottom:2px">🔀 ${c.origin} → ${c.destination}</div>
+      <div style="font-size:11px;color:#555;margin-bottom:2px">📍 ${c.position_desc||'-'}</div>
+      <div style="margin-top:6px;padding:3px 8px;background:${s.color};color:white;border-radius:10px;font-size:10px;display:inline-block">
+        ${s.icon} ${s.label}
+      </div>
+    </div>`;
+
+    if (mapMarkers[c.id]) {
+      // ✅ MARKER BERPINDAH: update posisi & tampilan tanpa hapus marker
+      const oldLatLng = mapMarkers[c.id].getLatLng();
+      const newLatLng = L.latLng(lat, lng);
+
+      if (oldLatLng.lat !== lat || oldLatLng.lng !== lng) {
+        // Animasi perpindahan marker
+        mapMarkers[c.id].setLatLng(newLatLng);
+        // Flash efek di panel kanan
+        const el = document.querySelector(`[data-id="${c.id}"]`);
+        if (el) { el.style.borderColor = s.color; setTimeout(()=>el.style.borderColor='',2000); }
+      }
+      mapMarkers[c.id].setIcon(icon);
+      mapMarkers[c.id].setPopupContent(popup);
+    } else {
+      // Marker baru
+      mapMarkers[c.id] = L.marker([lat, lng], { icon })
+        .addTo(mapInstance)
+        .bindPopup(popup);
+    }
+  });
+
+  // Update panel kanan
+  document.getElementById('activeCount').textContent = `${active.length} kontainer`;
+  document.getElementById('mapLastUpdate').textContent =
+    `Diupdate: ${new Date().toLocaleTimeString('id-ID')}`;
+
+  document.getElementById('trackingList').innerHTML = active.map(c => {
+    const s   = STATUS_CONFIG[c.status] || {};
+    const lat = parseFloat(c.position_lat) || -7.2575;
+    const lng = parseFloat(c.position_lng) || 112.7521;
+    return `<div data-id="${c.id}" style="padding:10px;border:1px solid var(--border);border-radius:10px;
+      margin-bottom:8px;cursor:pointer;transition:border-color .3s"
+      onclick="mapInstance.setView([${lat},${lng}],14);mapMarkers['${c.id}']?.openPopup()"
+      onmouseover="this.style.borderColor='${s.color||'var(--cyan)'}'"
+      onmouseout="this.style.borderColor='var(--border)'">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span class="mono">${c.id}</span>
+        ${statusBadge(c.status)}
+      </div>
+      <div style="font-size:11px;color:var(--gray);margin-top:4px">📍 ${c.position_desc||'-'}</div>
+      <div style="font-size:10px;color:var(--gray)">${c.vessel} · ${c.origin}→${c.destination}</div>
+    </div>`;
+  }).join('') || '<div style="color:var(--gray);text-align:center;padding:20px;font-size:12px">Tidak ada kontainer aktif</div>';
+
+  // Legend peta
+  document.getElementById('mapLegend').innerHTML = [...new Set(active.map(c=>c.status))].map(st => {
+    const s = STATUS_CONFIG[st] || {};
+    return `<div class="map-legend-item">
+      <div class="map-legend-dot" style="background:${s.color||'#64748b'}"></div>
+      <span>${s.label||st}</span>
+    </div>`;
+  }).join('');
+}
+
+// ── USERS ─────────────────────────────────────────────────
+async function renderUsers() {
+  const users = await API.getUsers();
+  const rc    = { admin:'#f59e0b', operator:'#10b981', stakeholder:'#00d4ff' };
+  document.getElementById('userTable').innerHTML = (users||[]).map(u =>
+    `<tr>
+      <td class="mono">${u.id}</td>
+      <td style="font-weight:600;color:var(--white)">${u.name}</td>
+      <td class="mono" style="font-size:11px">${u.username}</td>
+      <td><span class="badge" style="background:${rc[u.role]}20;color:${rc[u.role]}">${u.role.toUpperCase()}</span></td>
+      <td style="font-size:11px;color:var(--gray)">${u.email||'-'}</td>
+      <td style="font-size:11px;color:var(--gray)">${u.port||'-'}</td>
+      <td>
+        <button class="btn btn-ghost btn-sm" onclick="openEditUser(${u.id},'${u.username}','${u.name}','${u.role}','${u.email||''}','${u.port||''}')">✏️</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteUser(${u.id})">🗑</button>
+      </td>
+    </tr>`
+  ).join('');
+}
+
+function openAddUser() {
+  editingUser = null;
+  document.getElementById('modalUserTitle').textContent = 'Tambah Pengguna Baru';
+  ['u_username','u_password','u_name','u_email','u_port'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('u_role').value = 'stakeholder';
+  document.getElementById('modalUser').classList.add('open');
+}
+
+function openEditUser(id, username, name, role, email, port) {
+  editingUser = id;
+  document.getElementById('modalUserTitle').textContent = `Edit Pengguna: ${name}`;
+  document.getElementById('u_username').value = username;
+  document.getElementById('u_password').value = '';
+  document.getElementById('u_name').value     = name;
+  document.getElementById('u_role').value     = role;
+  document.getElementById('u_email').value    = email;
+  document.getElementById('u_port').value     = port;
+  document.getElementById('modalUser').classList.add('open');
+}
+
+async function saveUser() {
+  const data = {
+    id:       editingUser,
+    username: document.getElementById('u_username').value,
+    password: document.getElementById('u_password').value,
+    name:     document.getElementById('u_name').value,
+    role:     document.getElementById('u_role').value,
+    email:    document.getElementById('u_email').value,
+    port:     document.getElementById('u_port').value,
+  };
+  const res = editingUser ? await API.updateUser(data) : await API.createUser(data);
+  if (res.error) { showToast(res.error,'error'); return; }
+  closeModal('modalUser');
+  await renderUsers();
+  showToast(editingUser ? '✅ Pengguna berhasil diupdate!' : '✅ Pengguna baru berhasil ditambahkan!');
+}
+
+async function deleteUser(id) {
+  if (!confirm('Hapus pengguna ini?')) return;
+  const res = await API.deleteUser(id);
+  if (res.error) { showToast(res.error,'error'); return; }
+  await renderUsers();
+  showToast('🗑️ Pengguna berhasil dihapus');
+}
+
+// ── NOTIFICATIONS ─────────────────────────────────────────
+async function renderNotifications() {
+  const data   = await API.getNotifications();
+  const notifs = data.notifications || [];
+  document.getElementById('unreadCount').textContent = `${data.unread_count} belum dibaca`;
+  const nc = { success:'#10b981', warning:'#f59e0b', danger:'#ef4444', info:'#00d4ff' };
+  document.getElementById('notifList').innerHTML = notifs.map(n =>
+    `<div class="notif-item ${n.is_read?'':'unread'}" onclick="markRead('${n.id}')">
+      <div class="notif-dot" style="background:${nc[n.type]||'#64748b'}"></div>
+      <div style="flex:1">
+        <div style="font-size:12px">${n.message}</div>
+        <div style="font-size:10px;color:var(--gray)">📦 ${n.container_id||'-'} · ${formatDateTime(n.created_at)}</div>
+      </div>
+      ${!n.is_read?'<span style="font-size:10px;color:var(--cyan)">BARU</span>':''}
+    </div>`
+  ).join('') || '<div style="color:var(--gray);text-align:center;padding:30px">Tidak ada notifikasi</div>';
+}
+
+async function markRead(id) { await API.markRead(id); await renderNotifications(); await updateBadges(); }
+async function markAllRead() { await API.markRead('all'); await renderNotifications(); await updateBadges(); }
+
+// ── REPORTS ───────────────────────────────────────────────
+async function renderReports() {
+  const stats = await API.getStats();
+  document.getElementById('reportStats').innerHTML = `
+    <div class="stat-card"><div class="stat-label">Total</div><div class="stat-value">${stats.total}</div><div class="stat-icon">📦</div></div>
+    <div class="stat-card"><div class="stat-label">Completion Rate</div><div class="stat-value">${stats.total>0?Math.round(stats.completed/stats.total*100):0}%</div><div class="stat-icon">📊</div></div>
+    <div class="stat-card"><div class="stat-label">Dok Pending</div><div class="stat-value" style="color:var(--gold)">${stats.pending_docs}</div><div class="stat-icon">📄</div></div>
+  `;
+  const ctx = document.getElementById('reportChart').getContext('2d');
+  if (rptChart) rptChart.destroy();
+  const by = stats.by_status || {};
+  rptChart = new Chart(ctx, {
+    type: 'bar',
+    data: { labels: Object.keys(by).map(k=>STATUS_CONFIG[k]?.label||k),
+      datasets:[{ label:'Jumlah', data:Object.values(by),
+        backgroundColor:['#6366f1','#0891b2','#2563eb','#f59e0b','#d97706','#7c3aed','#10b981','#ef4444'], borderRadius:6 }] },
+    options:{ responsive:true, plugins:{legend:{display:false}}, scales:{x:{ticks:{color:'#64748b'}}, y:{ticks:{color:'#64748b',stepSize:1}}} }
+  });
+  document.getElementById('vesselPerf').innerHTML = (stats.vessels||[]).map(v =>
+    `<div style="display:flex;justify-content:space-between;padding:10px;background:rgba(255,255,255,.03);border-radius:8px;margin-bottom:6px">
+      <span style="font-size:12px;color:var(--white)">🚢 ${v.vessel}</span>
+      <span class="badge" style="background:rgba(0,212,255,.15);color:var(--cyan)">${v.cnt} kontainer</span>
+    </div>`
+  ).join('') || '<div style="color:var(--gray);font-size:12px">Tidak ada data</div>';
+}
+
+// ── BADGES ────────────────────────────────────────────────
+async function updateBadges() {
+  const stats = await API.getStats();
+  document.getElementById('nbContainer').textContent = stats.by_status?.discharged || 0;
+  document.getElementById('nbDoc').textContent       = stats.pending_docs || 0;
+}
+
+// ── TOAST ─────────────────────────────────────────────────
+function showToast(msg, type = 'success') {
+  const colors = { success:'#10b981', error:'#ef4444', info:'#38bdf8', warning:'#f59e0b' };
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.style.borderLeft = `4px solid ${colors[type]||colors.success}`;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+// ── MODAL CLOSE ───────────────────────────────────────────
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) closeModal(m.id); });
+});
+</script>
+</body>
+</html>

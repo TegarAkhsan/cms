@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>CMS — Login</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#080f1e;--blue:#1a4fd6;--cyan:#00d4ff;--green:#10b981;--red:#ef4444;--gray:#94a3b8;--white:#fff;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Space Grotesk',sans-serif;background:var(--navy);min-height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 50% at 20% 40%,rgba(26,79,214,.18) 0,transparent 60%),radial-gradient(ellipse 60% 40% at 80% 70%,rgba(0,212,255,.1) 0,transparent 60%);pointer-events:none;}
+body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(255,255,255,.02) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.02) 1px,transparent 1px);background-size:50px 50px;pointer-events:none;}
+.wrap{position:relative;z-index:10;width:100%;max-width:460px;padding:20px;}
+.logo{text-align:center;margin-bottom:36px;}
+.logo-icon{width:72px;height:72px;background:linear-gradient(135deg,var(--blue),var(--cyan));border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:34px;box-shadow:0 20px 40px rgba(26,79,214,.4);}
+.logo h1{font-size:30px;font-weight:700;color:var(--white);letter-spacing:-1px;}
+.logo h1 span{color:var(--cyan);}
+.logo p{color:var(--gray);font-size:12px;margin-top:4px;}
+.card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:24px;padding:32px;backdrop-filter:blur(20px);box-shadow:0 32px 64px rgba(0,0,0,.4);}
+.card h2{font-size:20px;font-weight:600;color:var(--white);margin-bottom:4px;}
+.card .sub{color:var(--gray);font-size:12px;margin-bottom:26px;}
+.fg{margin-bottom:16px;}
+.fg label{display:block;font-size:11px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.8px;margin-bottom:7px;}
+.fg input{width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:13px 15px;color:var(--white);font-family:'Space Grotesk',sans-serif;font-size:14px;outline:none;transition:all .2s;}
+.fg input:focus{border-color:var(--cyan);background:rgba(0,212,255,.05);box-shadow:0 0 0 3px rgba(0,212,255,.1);}
+.btn-login{width:100%;padding:14px;background:linear-gradient(135deg,var(--blue),#2563eb);border:none;border-radius:12px;color:white;font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:600;cursor:pointer;transition:all .2s;margin-top:6px;}
+.btn-login:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(26,79,214,.5);}
+.btn-login:disabled{opacity:.6;cursor:not-allowed;transform:none;}
+.err{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:10px;padding:11px 14px;color:#fca5a5;font-size:12px;margin-bottom:14px;display:none;}
+.demo{margin-top:22px;padding-top:18px;border-top:1px solid rgba(255,255,255,.06);}
+.demo p{font-size:10px;color:var(--gray);text-transform:uppercase;letter-spacing:.8px;font-weight:600;margin-bottom:10px;}
+.demo-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;}
+.db{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:10px 6px;cursor:pointer;transition:all .2s;text-align:center;}
+.db:hover{background:rgba(255,255,255,.08);transform:translateY(-2px);}
+.db .rn{font-size:11px;font-weight:600;color:var(--white);display:block;margin-bottom:3px;}
+.db .cr{font-size:10px;color:var(--gray);font-family:'JetBrains Mono',monospace;}
+.dot{width:6px;height:6px;border-radius:50%;display:inline-block;margin-right:4px;vertical-align:middle;}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:white;border-radius:50%;animation:sp .6s linear infinite;margin-right:8px;vertical-align:middle;}
+@keyframes sp{to{transform:rotate(360deg)}}
+.ship{position:fixed;font-size:22px;opacity:.06;animation:fl 22s linear infinite;pointer-events:none;}
+@keyframes fl{0%{transform:translateX(-80px) translateY(0)}50%{transform:translateX(calc(100vw + 80px)) translateY(-25px)}100%{transform:translateX(-80px)}}
+</style>
+</head>
+<body>
+<div class="ship" style="top:18%">🚢</div>
+<div class="ship" style="top:55%;animation-delay:-9s;font-size:15px">⚓</div>
+<div class="ship" style="top:38%;animation-delay:-16s">🚢</div>
+
+<div class="wrap">
+  <div class="logo">
+    <div class="logo-icon">⚓</div>
+    <h1>C<span>M</span>S</h1>
+    <p>Container Monitoring System · Politeknik Pelayaran Surabaya</p>
+  </div>
+  <div class="card">
+    <h2>Masuk ke Sistem</h2>
+    <p class="sub">Gunakan akun yang telah diberikan untuk mengakses dashboard</p>
+    <div class="err" id="err"></div>
+    <div class="fg"><label>Username</label><input id="u" type="text" placeholder="Masukkan username" autocomplete="username"></div>
+    <div class="fg"><label>Password</label><input id="p" type="password" placeholder="Masukkan password" autocomplete="current-password"></div>
+    <button class="btn-login" id="btnLogin" onclick="doLogin()">Masuk ke Dashboard →</button>
+    <div class="demo">
+      <p>Akun Demo</p>
+      <div class="demo-grid">
+        <div class="db" onclick="fill('admin','admin123')"><span class="rn"><span class="dot" style="background:#f59e0b"></span>Admin</span><span class="cr">admin / admin123</span></div>
+        <div class="db" onclick="fill('operator1','op123')"><span class="rn"><span class="dot" style="background:#10b981"></span>Operator</span><span class="cr">operator1 / op123</span></div>
+        <div class="db" onclick="fill('stakeholder1','sk123')"><span class="rn"><span class="dot" style="background:#00d4ff"></span>Stakeholder</span><span class="cr">stakeholder1 / sk123</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function fill(u,p){ document.getElementById('u').value=u; document.getElementById('p').value=p; }
+
+async function doLogin() {
+  const u   = document.getElementById('u').value.trim();
+  const p   = document.getElementById('p').value.trim();
+  const err = document.getElementById('err');
+  const btn = document.getElementById('btnLogin');
+
+  err.style.display='none';
+  if(!u||!p){ err.textContent='Username dan password wajib diisi'; err.style.display='block'; return; }
+
+  btn.disabled=true; btn.innerHTML='<span class="spin"></span>Memproses...';
+
+  try {
+    const res = await fetch('api/auth.php?action=login', {
+      method:'POST', credentials:'include',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({username:u, password:p})
+    });
+    const data = await res.json();
+    if(data.success){ window.location.href = data.redirect; }
+    else { err.textContent = data.error || 'Login gagal'; err.style.display='block'; }
+  } catch(e) {
+    err.textContent='Tidak dapat terhubung ke server. Pastikan Apache & MySQL sudah berjalan di XAMPP.';
+    err.style.display='block';
+  }
+  btn.disabled=false; btn.innerHTML='Masuk ke Dashboard →';
+}
+document.addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+</script>
+</body>
+</html>
