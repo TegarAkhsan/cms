@@ -4,84 +4,88 @@
 ---
 
 ## 📁 STRUKTUR FOLDER
-```
+```text
 cms/
-├── index.html            ← Halaman Login
-├── admin.html            ← Dashboard Admin
-├── operator.html         ← Dashboard Operator
-├── stakeholder.html      ← Dashboard Pengguna Jasa
-├── api-client.js         ← API Client (frontend ↔ PHP)
-├── fix_passwords.php     ← Jalankan SEKALI lalu hapus!
-├── api/
-│   ├── auth.php          ← Login / Logout / Session
-│   ├── containers.php    ← CRUD Kontainer
-│   ├── documents.php     ← Upload & Verifikasi Dokumen
-│   ├── notifications.php ← Sistem Notifikasi
-│   ├── stats.php         ← Statistik Dashboard
-│   └── users.php         ← Manajemen Pengguna
-├── database/
-│   ├── db.php            ← Koneksi MySQL PDO
-│   └── cms_db.sql        ← Script SQL (import ke phpMyAdmin)
-└── uploads/              ← File upload (otomatis dibuat)
+├── backend/              ← File backend PHP (API dan configurasi DB)
+│   ├── api/              ← Endpoint API (auth, containers, documents, dll)
+│   ├── database/         ← File SQL dan koneksi DB
+│   └── uploads/          ← Folder media dokumen (Otomatis Dibuat)
+├── frontend/             ← File frontend HTML, CSS, JS
+│   ├── auth/             ← Halaman Autentikasi (Login)
+│   └── dashboards/       ← Halaman Dashboard (Admin, Operator, Stakeholder)
+├── README.md             ← Panduan instalasi
+└── setup_db.php          ← Script bantu instalasi database otomatis
 ```
 
 ---
 
 ## 🚀 CARA INSTALL (Ikuti Urutan!)
 
-### Langkah 1 — Jalankan XAMPP
-- Buka **XAMPP Control Panel**
-- Klik **Start** pada **Apache**
-- Klik **Start** pada **MySQL**
-- Pastikan keduanya hijau ✅
+### Langkah 1 — Clone dan Copy File ke htdocs
+1. Setelah berhasil melakukan clone repository ke komputer Anda, pastikan nama folder utamanya adalah **`cms`** (ubah namanya jika belum).
+2. Pindahkan (Copy atau Cut) seluruh folder **`cms`** tersebut ke dalam folder **`htdocs`** di XAMPP Anda.
+3. Umumnya, folder tersebut akan berada di path berikut:
+   ```text
+   C:\xampp\htdocs\cms\
+   ```
+   *(Pastikan struktur di web server Anda terbaca sebagai `localhost/cms/...` tanpa folder ganda di dalamnya)*
 
-### Langkah 2 — Import Database
-1. Buka browser → `http://localhost/phpmyadmin`
-2. Klik **tab SQL** di bagian atas
-3. Buka file `database/cms_db.sql` dengan Notepad
-4. **Copy semua isinya** → Paste ke kotak SQL phpMyAdmin
-5. Klik **Go**
-6. Pastikan muncul database **`cms_db`** di sidebar kiri ✅
+### Langkah 2 — Jalankan XAMPP
+- Buka aplikasi **XAMPP Control Panel** dari desktop atau Start Menu komputer Anda.
+- Klik tombol **Start** pada baris **Apache**.
+- Klik tombol **Start** pada baris **MySQL**.
+- Pastikan modul Apache dan MySQL memiliki latar berwarna **hijau** ✅.
 
-### Langkah 3 — Copy File ke htdocs
+### Langkah 3 — Import Database & Setup
+Anda bisa memilih cara otomatis (Paling Direkomendasikan) atau melakukan impor manual menggunakan phpMyAdmin.
+
+#### Opsi A: Cara Otomatis (Sangat Direkomendasikan)
+Cara termudah, cukup buka browser dan akses URL berikut untuk menginstall skema database dan data awalnya:
+```text
+http://localhost/cms/setup_db.php
 ```
-C:\xampp\htdocs\cms\
-```
-Letakkan **semua file & folder** di sini.
+Script tersebut akan otomatis memastikan database bernama `cms_db` terbuat, kemudian meng-import seluruh tabel dan data akun ke dalamnya. Tunggu sampai muncul teks indikator **"ALL DONE!"**. 
 
-### Langkah 4 — Set Password
-Buka browser → `http://localhost/cms/fix_passwords.php`
+#### Opsi B: Cara Manual melalui phpMyAdmin
+1. Buka browser dan ketik alamat → `http://localhost/phpmyadmin`
+2. Klik menu **New / Baru** pada sidebar di kiri untuk membuat database kosong.
+3. Beri nama database **`cms_db`** dan klik tombol **Create / Buat**.
+4. Klik pada database `cms_db` di sidebar tersebut, lalu pilih tab **Import** di deretan menu atas.
+5. Klik **Choose File** / Browse, dan arahkan ke file import di folder sistem:
+   `C:\xampp\htdocs\cms\backend\database\cms_db.sql`
+6. Lalu scroll ke bawah dan klik **Go / Import**.
+7. Pastikan ada pemberitahuan hijau bahwa data sukses ter-import sepenuhnya ✅.
 
-Tunggu sampai muncul pesan hijau "✅ Semua password berhasil diset!"
-
-> ⚠️ **HAPUS `fix_passwords.php`** setelah selesai!
-
-### Langkah 5 — Buka Aplikasi
-```
-http://localhost/cms/index.html
+### Langkah 4 — Buka Aplikasi Login
+Jika database telah ter-import sepenuhnya tanpa error, akses sistem menggunakan browser menuju ke alamat instalasi frontend:
+```text
+http://localhost/cms/frontend/auth/login.html
 ```
 
 ---
 
-## 🔑 AKUN LOGIN
+## 🔑 AKUN LOGIN DEFAULT
 
-| Role        | Username     | Password   |
-|-------------|-------------|------------|
-| Admin       | admin        | admin123   |
-| Operator 1  | operator1    | op123      |
-| Operator 2  | operator2    | op456      |
-| Stakeholder 1 | stakeholder1 | sk123    |
-| Stakeholder 2 | stakeholder2 | sk456    |
+Gunakan rincian user di bawah ini untuk tahapan percobaan awal (Data ini default bawaan `cms_db.sql`). Jangan lupa perhatikan huruf kapital jika diperlukan.
+
+| Role        | Username       | Password   |
+|-------------|---------------|------------|
+| Admin       | admin          | admin123   |
+| Operator    | operator1      | op123      |
+| Stakeholder | stakeholder1   | sk123      |
+
+*(Sebagai admin, silakan ganti password operator dan buat akun baru saat mencoba di production).*
 
 ---
 
-## ⚙️ KONFIGURASI DATABASE
-Edit file `database/db.php` jika perlu:
+## ⚙️ KONFIGURASI DATABASE TAMBAHAN
+
+Jika pengguna MySQL di XAMPP Anda **menggunakan custom password** (bukan bawaan instalasi default XAMPP yang bernilai kosong `""`), Anda diharuskan mengedit parameter koneksinya di `backend/database/db.php`:
 ```php
 define('DB_HOST', 'localhost');   // Host MySQL
-define('DB_NAME', 'cms_db');      // Nama database
+define('DB_NAME', 'cms_db');      // Nama database 
 define('DB_USER', 'root');        // Username MySQL
-define('DB_PASS', '');            // Password (kosong = default XAMPP)
+define('DB_PASS', '');            // ← Isikan password MySQL XAMPP Anda di sini jika ada
 ```
 
 ---
@@ -95,40 +99,45 @@ define('DB_PASS', '');            // Password (kosong = default XAMPP)
 - Peta tracking real-time (Leaflet.js + OpenStreetMap)
 - Manajemen pengguna (tambah, edit, hapus, ganti password)
 - Laporan & statistik performa operator/vessel
+- Filter Hari, Bulan, Tahun dan Ekspor Laporan Kontainer & Dokumen ke bentuk file Excel (.xlsx)
 
 ### 🟢 Operator
 - KPI bar status kontainer
 - Update status & posisi kontainer (auto-log timeline + notif ke pemilik)
 - Upload dokumen dengan file nyata (PDF/JPG/PNG)
 - Verifikasi / revisi dokumen dari stakeholder
-- Yard Map visual (18 blok A1–C6 dengan occupancy)
-- Live tracking on-delivery
+- Yard Map visual (18 blok A1–C6 dengan simulasi occupancy capacity tracker)
+- Live tracking status on-delivery
+- Preview Dokumen secara cepat dalam jendela popup
 
 ### 🔵 Stakeholder / Pengguna Jasa
 - Monitor kontainer milik sendiri
-- Progress bar 7 langkah pengiriman
+- Progress bar 7 langkah pengiriman 
 - Upload dokumen ke operator (file nyata)
-- Unduh dokumen yang sudah diapprove
-- Resubmit dokumen yang perlu revisi
-- Notifikasi real-time setiap perubahan
+- Preview real-time dalam browser dan unduh dokumen yang sudah diapprove
+- Resubmit ulang dokumen yang mendapat status revisi
+- Widget Panel dan Notifikasi live setiap ada perubahan
 
 ---
 
-## 🔄 SINKRONISASI DATA
-```
-Operator update status
-      ↓
-PHP simpan ke MySQL (cms_db)
-      ↓
-Auto: catat timeline + kirim notifikasi ke pemilik
-      ↓
-Semua role refresh halaman → data terbaru dari MySQL
+## 🔄 ALUR SINKRONISASI DATA
+```text
+Operator / Stakeholder mengupdate Status atau File
+                  ↓  (Kirim API Request)
+    Backend PHP Memproses Permintaan
+                  ↓
+ MySQL Eksekusi dan Menyimpan (cms_db)
+                  ↓
+  Aktivitas baru dimasukkan ke daftar Timeline 
+  + Broadcast notifikasi personal terbentuk
+                  ↓
+Semua pihak yang terhubung memuat data & notifikasi baru
 ```
 
 ---
 
-## 📋 REQUIREMENTS
-- PHP 7.4+ dengan extension PDO + PDO_MySQL
-- MySQL 5.7+ atau MariaDB 10.3+
-- Apache Web Server
-- Semua sudah tersedia di XAMPP ✅
+## 📋 PERSYARATAN SERVER (REQUIREMENTS)
+- PHP Runtime versi 7.4 ke atas dengan ekstensi `PDO` dan `PDO_MySQL` ter-enable.
+- Database Engine MySQL 5.7+ atau MariaDB 10.3+.
+- Apache Web Server.
+- ✅ *Sangat dianjurkan menggunakan package **XAMPP** atau **Laragon** versi standar terbaru yang sudah memiliki semua kriteria dependensi yang diperlukan di atas.*
