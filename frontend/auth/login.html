@@ -84,6 +84,16 @@ body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(r
 </div>
 
 <script>
+// Dynamically compute the API base so this works on Laragon, XAMPP,
+// or any subdirectory without hardcoding a path.
+// e.g. http://localhost/cms/frontend/auth/login.html
+//   → splits at /frontend/ → http://localhost/cms
+//   → base = http://localhost/cms/backend/api
+const _apiBase = (function() {
+  const parts = window.location.pathname.split('/frontend/');
+  return window.location.origin + parts[0] + '/backend/api';
+})();
+
 function fill(u,p){ document.getElementById('u').value=u; document.getElementById('p').value=p; }
 
 async function doLogin() {
@@ -98,16 +108,19 @@ async function doLogin() {
   btn.disabled=true; btn.innerHTML='<span class="spin"></span>Memproses...';
 
   try {
-    const res = await fetch('../../backend/api/auth.php?action=login', {
+    const res = await fetch(_apiBase + '/auth.php?action=login', {
       method:'POST', credentials:'include',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({username:u, password:p})
     });
+    if (!res.ok && res.status !== 200 && res.status !== 400 && res.status !== 401) {
+      throw new Error('HTTP ' + res.status);
+    }
     const data = await res.json();
     if(data.success){ window.location.href = '../dashboards/' + data.redirect; }
     else { err.textContent = data.error || 'Login gagal'; err.style.display='block'; }
   } catch(e) {
-    err.textContent='Tidak dapat terhubung ke server. Pastikan Apache & MySQL sudah berjalan di XAMPP.';
+    err.textContent='Tidak dapat terhubung ke server. Pastikan Apache & MySQL sudah berjalan. (' + e.message + ')';
     err.style.display='block';
   }
   btn.disabled=false; btn.innerHTML='Masuk ke Dashboard →';

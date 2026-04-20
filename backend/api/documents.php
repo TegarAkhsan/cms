@@ -1,14 +1,8 @@
 <?php
-// api/documents.php
-header('Content-Type: application/json; charset=utf-8');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') exit(0);
-
 require_once __DIR__ . '/../database/db.php';
+sendCommonHeaders();
 
-if (session_status() === PHP_SESSION_NONE) session_start();
+startSecureSession();
 $user   = requireAuth();
 $method = $_SERVER['REQUEST_METHOD'];
 $input  = getInput();
@@ -82,16 +76,7 @@ switch ($method) {
             if (!move_uploaded_file($_FILES['file']['tmp_name'], $dest)) {
                 jsonResponse(['error' => 'Gagal menyimpan file'], 500);
             }
-            // Build a web-accessible URL for the file
-            $baseUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http')
-                . '://' . $_SERVER['HTTP_HOST'];
-            // Determine the web root path for /cms/backend/uploads/
-            $scriptPath = str_replace('\\', '/', __DIR__);
-            $docRoot    = str_replace('\\', '/', $_SERVER['DOCUMENT_ROOT']);
-            $relDir     = ltrim(str_replace($docRoot, '', $scriptPath), '/');
-            // Go up from api/ to backend/, then into uploads/
-            $uploadsWebPath = '/' . dirname($relDir) . '/uploads/';
-            $filepath = $baseUrl . $uploadsWebPath . $filename;
+            $filepath = 'backend/uploads/' . $filename;
         }
 
         $status = ($user['role'] === 'stakeholder') ? 'pending' : 'approved';

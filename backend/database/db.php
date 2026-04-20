@@ -6,8 +6,37 @@
 define('DB_HOST', 'localhost');
 define('DB_NAME', 'cms_db');
 define('DB_USER', 'root');
-define('DB_PASS', '');       // Kosong = default XAMPP tanpa password
+define('DB_PASS', '');
 define('DB_CHARSET', 'utf8mb4');
+
+// Ensure clean JSON output by hiding errors in production-like environments
+// ini_set('display_errors', 0); 
+// error_reporting(E_ALL);
+
+/**
+ * Sends unified JSON and CORS headers.
+ */
+function sendCommonHeaders(): void {
+    if (headers_sent()) return;
+    
+    header('Content-Type: application/json; charset=utf-8');
+    
+    // Handle CORS with credentials support
+    $origin = $_SERVER['HTTP_ORIGIN'] ?? null;
+    if ($origin) {
+        header("Access-Control-Allow-Origin: $origin");
+        header('Access-Control-Allow-Credentials: true');
+    } else {
+        header("Access-Control-Allow-Origin: *");
+    }
+    header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
+    header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
+
+    // Handle preflight OPTIONS request
+    if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+        exit(0);
+    }
+}
 
 function getDB(): PDO {
     static $pdo = null;
@@ -51,8 +80,30 @@ function getInput(): array {
     return array_merge($_GET, $_POST, $json);
 }
 
+function startSecureSession(): void {
+    if (session_status() !== PHP_SESSION_NONE) return;
+
+    // Determine the cookie path: strip /backend/api down to the project root
+    // e.g. /cms/backend/api → cookie path = /cms/
+    $scriptPath = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? ''));
+    // Walk up two directories (api/ → backend/ → project root)
+    $cookiePath = dirname(dirname($scriptPath)) . '/';
+    // Normalize to at least /
+    if ($cookiePath === '//') $cookiePath = '/';
+
+    session_set_cookie_params([
+        'lifetime' => 0,
+        'path'     => $cookiePath,
+        'domain'   => '',
+        'secure'   => false, // set true if serving HTTPS
+        'httponly' => true,
+        'samesite' => 'Lax',
+    ]);
+    session_start();
+}
+
 function requireAuth(): array {
-    if (session_status() === PHP_SESSION_NONE) session_start();
+    startSecureSession();
     if (empty($_SESSION['user'])) {
         jsonResponse(['error' => 'Unauthorized - silakan login kembali'], 401);
     }

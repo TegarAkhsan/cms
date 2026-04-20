@@ -359,7 +359,7 @@ async function renderContainers(page = 1) {
       <button class="btn btn-primary btn-sm" onclick="openUpdateStatus('${c.id}')">✏️</button>
     </td></tr>
   `).join('') || `<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--gray)">Tidak ada data</td></tr>`;
-  document.getElementById('pg-container').innerHTML = buildPagination(filtered.length, page, 'renderContainers');
+  document.getElementById('pg-container').innerHTML = buildPagination(data.length, page, 'renderContainers');
 }
 
 async function openUpdateStatus(id) {
@@ -421,7 +421,7 @@ async function renderDocuments(page = 1) {
     <td style="font-size:11px;color:var(--gray)">${formatDateTime(d.created_at)}</td>
     <td style="font-size:11px;max-width:150px">${d.notes||'-'}</td>
     <td style="white-space:nowrap">
-      ${d.filepath ? `<button class="btn btn-ghost btn-sm" onclick="openDocPreview(\'${d.filepath}\', \'${d.type}\', \'${d.id}\')">👁 Preview</button>` : ''}
+      ${d.filepath ? `<button class="btn btn-ghost btn-sm" onclick="openDocPreview(\'${API.resolveUrl(d.filepath)}\', \'${d.type}\', \'${d.id}\')">👁 Preview</button>` : ''}
       ${d.status==='pending'?`
         <button class="btn btn-success btn-sm" onclick="updateDoc('${d.id}','approved','Disetujui operator')">✅</button>
         <button class="btn btn-danger btn-sm" onclick="promptRevision('${d.id}')">❌</button>

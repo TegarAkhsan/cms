@@ -3,6 +3,13 @@
 const API = {
     base: window.location.origin + window.location.pathname.split('/frontend/')[0] + '/backend/api',
 
+    resolveUrl(path) {
+        if (!path) return '';
+        if (path.startsWith('http')) return path;
+        const root = window.location.origin + window.location.pathname.split('/frontend/')[0];
+        return root + (path.startsWith('/') ? '' : '/') + path;
+    },
+
     async call(endpoint, method = 'GET', data = null) {
         const url  = `${this.base}/${endpoint}`;
         const opts = { method, credentials: 'include', headers: { 'Content-Type': 'application/json' } };
@@ -15,7 +22,13 @@ const API = {
 
         return fetch(url, opts).then(async r => {
             const json = await r.json();
-            if (r.status === 401) { window.location.href = '../auth/login.html'; }
+            if (r.status === 401) {
+                // Dynamically build login URL so this works on Laragon, XAMPP, or any subdirectory
+                const loginUrl = window.location.origin
+                    + window.location.pathname.split('/frontend/')[0]
+                    + '/frontend/auth/login.html';
+                window.location.href = loginUrl;
+            }
             return json;
         }).catch(() => ({ error: 'Koneksi server gagal' }));
     },
@@ -90,7 +103,10 @@ function docBadge(status) {
 }
 async function doLogout() {
     await API.logout();
-    window.location.href = '../auth/login.html';
+    const loginUrl = window.location.origin
+        + window.location.pathname.split('/frontend/')[0]
+        + '/frontend/auth/login.html';
+    window.location.href = loginUrl;
 }
 
 // Auto-refresh helper

@@ -564,7 +564,7 @@ async function renderContainers(page = 1) {
       </td>
     </tr>`
   ).join('') || `<tr><td colspan="8" style="text-align:center;padding:30px;color:var(--gray)">Tidak ada data kontainer</td></tr>`;
-  document.getElementById('pg-container').innerHTML = buildPagination(filtered.length, page, 'renderContainers');
+  document.getElementById('pg-container').innerHTML = buildPagination(data.length, page, 'renderContainers');
 }
 
 async function deleteContainer(id) {
@@ -638,7 +638,7 @@ async function renderDocuments(page = 1) {
       <td style="font-size:11px;color:var(--gray)">${formatDateTime(d.created_at)}</td>
       <td style="font-size:11px;max-width:160px">${d.notes||'-'}</td>
       <td style="white-space:nowrap">
-        ${d.filepath ? `<button class="btn btn-ghost btn-sm" onclick="openDocPreview(\'${d.filepath}\', \'${d.type}\', \'${d.id}\')">👁 Preview</button>` : '<span style="font-size:10px;color:var(--gray)">Tidak ada file</span>'}
+        ${d.filepath ? `<button class="btn btn-ghost btn-sm" onclick="openDocPreview(\'${API.resolveUrl(d.filepath)}\', \'${d.type}\', \'${d.id}\')">👁 Preview</button>` : '<span style="font-size:10px;color:var(--gray)">Tidak ada file</span>'}
         <button class="btn btn-ghost btn-sm" onclick="openDocStatus('${d.id}','${d.status}','${d.type}')">✏️ Update</button>
       </td>
     </tr>`
