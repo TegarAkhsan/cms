@@ -1,3 +1,5 @@
+<?php
+$content = <<<'EOD'
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -309,3 +311,7 @@
 <script src="../assets/js/stakeholder.js"></script>
 </body>
 </html>
+EOD;
+
+file_put_contents('frontend/dashboards/stakeholder.html', $content);
+echo "stakeholder.html restored and updated.\n";
