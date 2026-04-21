@@ -1,15 +1,24 @@
 -- ============================================================
 -- CMS — Container Monitoring System
 -- Database: MySQL
--- Jalankan file ini di phpMyAdmin tab SQL
+-- ✅ Jalankan file ini di phpMyAdmin tab SQL
+-- ✅ Termasuk semua perubahan terbaru (status user, booking_status)
 -- ============================================================
+
+SET FOREIGN_KEY_CHECKS = 0;
 
 -- Buat & gunakan database
 CREATE DATABASE IF NOT EXISTS cms_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE cms_db;
 
 -- ── USERS ──────────────────────────────────────────────────
-CREATE TABLE IF NOT EXISTS users (
+DROP TABLE IF EXISTS notifications;
+DROP TABLE IF EXISTS documents;
+DROP TABLE IF EXISTS events;
+DROP TABLE IF EXISTS containers;
+DROP TABLE IF EXISTS users;
+
+CREATE TABLE users (
     id         INT AUTO_INCREMENT PRIMARY KEY,
     username   VARCHAR(50) UNIQUE NOT NULL,
     password   VARCHAR(255) NOT NULL,
@@ -17,34 +26,36 @@ CREATE TABLE IF NOT EXISTS users (
     name       VARCHAR(100) NOT NULL,
     email      VARCHAR(100),
     port       VARCHAR(100),
+    status     ENUM('pending','verified','rejected') DEFAULT 'verified',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ── CONTAINERS ─────────────────────────────────────────────
-CREATE TABLE IF NOT EXISTS containers (
-    id            VARCHAR(20) PRIMARY KEY,
-    booking_no    VARCHAR(50),
-    vessel        VARCHAR(100),
-    voyage        VARCHAR(50),
-    type          VARCHAR(30),
-    weight        INT DEFAULT 0,
-    commodity     VARCHAR(100),
-    origin        VARCHAR(100),
-    destination   VARCHAR(100),
-    eta           DATE,
-    status        ENUM('booking','gate_in','on_vessel','discharged','clearance','on_delivery','gate_in_depo','completed','delay') DEFAULT 'booking',
-    owner_id      INT,
-    operator_id   INT,
-    position_lat  DECIMAL(10,6) DEFAULT -7.257500,
-    position_lng  DECIMAL(10,6) DEFAULT 112.752100,
-    position_desc VARCHAR(200),
-    created_at    DATETIME DEFAULT CURRENT_TIMESTAMP,
+CREATE TABLE containers (
+    id             VARCHAR(20) PRIMARY KEY,
+    booking_no     VARCHAR(50),
+    vessel         VARCHAR(100),
+    voyage         VARCHAR(50),
+    type           VARCHAR(30),
+    weight         INT DEFAULT 0,
+    commodity      VARCHAR(100),
+    origin         VARCHAR(100),
+    destination    VARCHAR(100),
+    eta            DATE,
+    status         ENUM('booking','gate_in','ship_arrival','discharge','yard_map','clearance','loading','ship_departure','delivery','completed') DEFAULT 'booking',
+    booking_status ENUM('Ekspor','Impor') DEFAULT 'Ekspor',
+    owner_id       INT,
+    operator_id    INT,
+    position_lat   DECIMAL(10,6) DEFAULT -7.257500,
+    position_lng   DECIMAL(10,6) DEFAULT 112.752100,
+    position_desc  VARCHAR(200),
+    created_at     DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (owner_id)    REFERENCES users(id) ON DELETE SET NULL,
     FOREIGN KEY (operator_id) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ── DOCUMENTS ──────────────────────────────────────────────
-CREATE TABLE IF NOT EXISTS documents (
+CREATE TABLE documents (
     id           VARCHAR(20) PRIMARY KEY,
     container_id VARCHAR(20),
     type         VARCHAR(100) NOT NULL,
@@ -59,7 +70,7 @@ CREATE TABLE IF NOT EXISTS documents (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ── EVENTS (Timeline) ──────────────────────────────────────
-CREATE TABLE IF NOT EXISTS events (
+CREATE TABLE events (
     id           VARCHAR(20) PRIMARY KEY,
     container_id VARCHAR(20),
     event        VARCHAR(100) NOT NULL,
@@ -70,7 +81,7 @@ CREATE TABLE IF NOT EXISTS events (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ── NOTIFICATIONS ──────────────────────────────────────────
-CREATE TABLE IF NOT EXISTS notifications (
+CREATE TABLE notifications (
     id           VARCHAR(20) PRIMARY KEY,
     user_id      INT,
     container_id VARCHAR(20),
@@ -81,30 +92,33 @@ CREATE TABLE IF NOT EXISTS notifications (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+SET FOREIGN_KEY_CHECKS = 1;
+
 -- ============================================================
 -- SEED DATA
 -- ============================================================
 
--- Users (password di-hash dengan PHP password_hash)
--- admin123, op123, op456, sk123, sk456
-INSERT INTO users (username, password, role, name, email, port) VALUES
-('admin',        '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin',       'Administrator',       'admin@cms.id',             NULL),
-('operator1',    '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'operator',    'Budi Santoso',        'budi@pelabuhan.id',        'Tanjung Perak'),
-('operator2',    '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'operator',    'Sari Dewi',           'sari@pelabuhan.id',        'Pelabuhan Merak'),
-('stakeholder1', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'stakeholder', 'PT. Maju Sejahtera',  'cs@majusejahtera.id',      NULL),
-('stakeholder2', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'stakeholder', 'CV. Nusantara Cargo', 'info@nusantaracargo.id',   NULL);
+-- Users
+-- Semua password default: "password"
+-- Hash: $2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi
+INSERT INTO users (username, password, role, name, email, port, status) VALUES
+('admin',        '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin',       'Administrator',       'admin@cms.id',           NULL,             'verified'),
+('operator1',    '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'operator',    'Budi Santoso',        'budi@pelabuhan.id',      'Tanjung Perak',  'verified'),
+('operator2',    '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'operator',    'Sari Dewi',           'sari@pelabuhan.id',      'Pelabuhan Merak','verified'),
+('stakeholder1', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'stakeholder', 'PT. Maju Sejahtera',  'cs@majusejahtera.id',    NULL,             'verified'),
+('stakeholder2', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'stakeholder', 'CV. Nusantara Cargo', 'info@nusantaracargo.id', NULL,             'verified');
 
--- Note: hash di atas adalah untuk password 'password'
--- Jalankan fix_passwords.php setelah install untuk set password yang benar
+-- ⚠️ Catatan: Hash di atas adalah untuk password 'password'
+-- Jalankan fix_passwords.php setelah install untuk set password yang benar (admin123, op123, sk123, dll)
 
 -- Containers
-INSERT INTO containers (id, booking_no, vessel, voyage, type, weight, commodity, origin, destination, eta, status, owner_id, operator_id, position_lat, position_lng, position_desc, created_at) VALUES
-('CTR001','BK-2026-0312','KM. Nusantara Jaya','NJ-2026-03','20ft Dry',18500,'Elektronik','Jakarta','Surabaya','2026-03-05','gate_in',4,2,-7.257500,112.752100,'Yard A-12, Tanjung Perak','2026-03-01 08:00:00'),
-('CTR002','BK-2026-0287','MV. Samudra Biru','SB-2026-02','40ft HC',24000,'Tekstil','Surabaya','Makassar','2026-03-08','on_vessel',4,2,-7.180000,112.720000,'On Board MV. Samudra Biru','2026-02-28 10:00:00'),
-('CTR003','BK-2026-0301','KM. Garuda Mas','GM-2026-04','20ft Reefer',12000,'Produk Segar','Makassar','Jakarta','2026-03-10','clearance',5,3,-6.105000,106.830000,'Clearance Bea Cukai - Tanjung Priok','2026-03-02 07:30:00'),
-('CTR004','BK-2026-0315','KM. Nusantara Jaya','NJ-2026-03','40ft Dry',28000,'Mesin & Spare Part','Jakarta','Surabaya','2026-03-05','discharged',5,2,-7.260000,112.750000,'Discharged - Menunggu Gate Out','2026-03-01 09:00:00'),
-('CTR005','BK-2026-0290','MV. Cemara Indah','CI-2026-02','20ft Dry',15000,'Bahan Kimia','Batam','Surabaya','2026-03-12','on_delivery',4,2,-7.300000,112.780000,'Dalam Pengiriman Truk - KM 45','2026-02-27 14:00:00'),
-('CTR006','BK-2026-0278','MV. Cemara Indah','CI-2026-01','40ft Reefer',22000,'Daging Sapi','Surabaya','Papua','2026-03-03','completed',5,2,-7.280000,112.740000,'Depo - Selesai','2026-02-20 11:00:00');
+INSERT INTO containers (id, booking_no, vessel, voyage, type, weight, commodity, origin, destination, eta, status, booking_status, owner_id, operator_id, position_lat, position_lng, position_desc, created_at) VALUES
+('CTR001','BK-2026-0312','KM. Nusantara Jaya','NJ-2026-03','20ft Dry',18500,'Elektronik','Jakarta','Surabaya','2026-03-05','gate_in','Ekspor',4,2,-7.257500,112.752100,'Yard A-12, Tanjung Perak','2026-03-01 08:00:00'),
+('CTR002','BK-2026-0287','MV. Samudra Biru','SB-2026-02','40ft HC',24000,'Tekstil','Surabaya','Makassar','2026-03-08','on_vessel','Ekspor',4,2,-7.180000,112.720000,'On Board MV. Samudra Biru','2026-02-28 10:00:00'),
+('CTR003','BK-2026-0301','KM. Garuda Mas','GM-2026-04','20ft Reefer',12000,'Produk Segar','Makassar','Jakarta','2026-03-10','clearance','Impor',5,3,-6.105000,106.830000,'Clearance Bea Cukai - Tanjung Priok','2026-03-02 07:30:00'),
+('CTR004','BK-2026-0315','KM. Nusantara Jaya','NJ-2026-03','40ft Dry',28000,'Mesin & Spare Part','Jakarta','Surabaya','2026-03-05','discharged','Ekspor',5,2,-7.260000,112.750000,'Discharged - Menunggu Gate Out','2026-03-01 09:00:00'),
+('CTR005','BK-2026-0290','MV. Cemara Indah','CI-2026-02','20ft Dry',15000,'Bahan Kimia','Batam','Surabaya','2026-03-12','on_delivery','Impor',4,2,-7.300000,112.780000,'Dalam Pengiriman Truk - KM 45','2026-02-27 14:00:00'),
+('CTR006','BK-2026-0278','MV. Cemara Indah','CI-2026-01','40ft Reefer',22000,'Daging Sapi','Surabaya','Papua','2026-03-03','completed','Ekspor',5,2,-7.280000,112.740000,'Depo - Selesai','2026-02-20 11:00:00');
 
 -- Documents
 INSERT INTO documents (id, container_id, type, filename, status, uploaded_by, notes, created_at) VALUES
@@ -141,3 +155,13 @@ INSERT INTO notifications (id, user_id, container_id, message, type, is_read, cr
 ('NTF003',5,'CTR006','Pengiriman CTR006 telah selesai','success',1,'2026-03-03 16:30:00'),
 ('NTF004',2,'CTR003','Dokumen baru diupload untuk CTR003','info',0,'2026-03-02 08:00:00'),
 ('NTF005',1,'CTR001','Kontainer baru terdaftar: CTR001','info',1,'2026-03-01 08:00:00');
+
+-- ============================================================
+-- ✅ SELESAI — Database siap digunakan
+-- Login default:
+--   admin       / password  (Admin)
+--   operator1   / password  (Operator - Tanjung Perak)
+--   operator2   / password  (Operator - Merak)
+--   stakeholder1/ password  (Stakeholder - PT. Maju Sejahtera)
+--   stakeholder2/ password  (Stakeholder - CV. Nusantara Cargo)
+-- ============================================================

@@ -67,15 +67,16 @@ const API = {
 
 // ── STATUS CONFIG ─────────────────────────────────────────
 const STATUS_CONFIG = {
-    booking:      { label:'Booking',              color:'#6366f1', bg:'rgba(99,102,241,.15)',   icon:'📋' },
-    gate_in:      { label:'Gate-In Terminal',     color:'#0891b2', bg:'rgba(8,145,178,.15)',    icon:'🚪' },
-    on_vessel:    { label:'Di Atas Kapal',         color:'#2563eb', bg:'rgba(37,99,235,.15)',    icon:'🚢' },
-    discharged:   { label:'Dibongkar',             color:'#f59e0b', bg:'rgba(245,158,11,.15)',   icon:'⬇️' },
-    clearance:    { label:'Clearance Bea Cukai',  color:'#d97706', bg:'rgba(217,119,6,.15)',    icon:'🔍' },
-    on_delivery:  { label:'Dalam Pengiriman',      color:'#7c3aed', bg:'rgba(124,58,237,.15)',   icon:'🚛' },
-    gate_in_depo: { label:'Gate-In Depo',          color:'#059669', bg:'rgba(5,150,105,.15)',    icon:'🏭' },
-    completed:    { label:'Selesai',               color:'#10b981', bg:'rgba(16,185,129,.15)',   icon:'✅' },
-    delay:        { label:'Delay',                 color:'#ef4444', bg:'rgba(239,68,68,.15)',    icon:'⚠️' },
+    booking:        { label:'Booking',              color:'#6366f1', bg:'rgba(99,102,241,.15)',   icon:'📋' },
+    gate_in:        { label:'Gate-In Terminal',     color:'#0891b2', bg:'rgba(8,145,178,.15)',    icon:'🚪' },
+    ship_arrival:   { label:'Ship Arrival',         color:'#2563eb', bg:'rgba(37,99,235,.15)',    icon:'🚢' },
+    discharge:      { label:'Discharge',            color:'#f59e0b', bg:'rgba(245,158,11,.15)',   icon:'🏗️' },
+    yard_map:       { label:'Yard Map',             color:'#0ea5e9', bg:'rgba(14,165,233,.15)',   icon:'🗺️' },
+    clearance:      { label:'Clearance',            color:'#d97706', bg:'rgba(217,119,6,.15)',    icon:'🔍' },
+    loading:        { label:'Loading',              color:'#f59e0b', bg:'rgba(245,158,11,.15)',   icon:'🏗️' },
+    ship_departure: { label:'Ship Departure',       color:'#2563eb', bg:'rgba(37,99,235,.15)',    icon:'🚢' },
+    delivery:       { label:'Delivery',             color:'#7c3aed', bg:'rgba(124,58,237,.15)',   icon:'🚛' },
+    completed:      { label:'Selesai',               color:'#10b981', bg:'rgba(16,185,129,.15)',   icon:'✅' },
 };
 
 const DOC_STATUS = {

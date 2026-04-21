@@ -1,3 +1,5 @@
+<?php
+$content = <<<'EOD'
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -270,3 +272,7 @@
 <script src="../assets/js/operator.js"></script>
 </body>
 </html>
+EOD;
+
+file_put_contents('frontend/dashboards/operator.html', $content);
+echo "operator.html restored and updated.\n";

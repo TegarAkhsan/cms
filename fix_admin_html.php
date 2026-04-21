@@ -1,3 +1,5 @@
+<?php
+$content = <<<'EOD'
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -404,3 +406,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
 <script src="../assets/js/admin.js"></script>
 </body>
 </html>
+EOD;
+
+file_put_contents('frontend/dashboards/admin.html', $content);
+echo "admin.html restored and updated.\n";

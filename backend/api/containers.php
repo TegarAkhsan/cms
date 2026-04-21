@@ -80,7 +80,7 @@ switch ($method) {
 
     // ── POST: Create ──────────────────────────────────────
     case 'POST':
-        if (!in_array($user['role'], ['admin', 'operator'])) {
+        if (!in_array($user['role'], ['admin', 'operator', 'stakeholder'])) {
             jsonResponse(['error' => 'Akses ditolak'], 403);
         }
 
@@ -94,8 +94,8 @@ switch ($method) {
         $stmt = $pdo->prepare("
             INSERT INTO containers 
             (id, booking_no, vessel, voyage, type, weight, commodity, origin, destination, eta,
-             status, owner_id, operator_id, position_lat, position_lng, position_desc)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+             status, owner_id, operator_id, position_lat, position_lng, position_desc, booking_status)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
         ");
         $stmt->execute([
             $id,
@@ -114,6 +114,7 @@ switch ($method) {
             floatval($input['position_lat'] ?? -7.2575),
             floatval($input['position_lng'] ?? 112.7521),
             $input['position_desc'] ?? '',
+            $input['booking_status'] ?? 'Ekspor',
         ]);
 
         // Log event
@@ -150,7 +151,8 @@ switch ($method) {
                 type          = ?, weight        = ?, commodity     = ?,
                 origin        = ?, destination   = ?, eta           = ?,
                 status        = ?, owner_id      = ?, operator_id   = ?,
-                position_lat  = ?, position_lng  = ?, position_desc = ?
+                position_lat  = ?, position_lng  = ?, position_desc = ?,
+                booking_status = ?
             WHERE id = ?
         ");
         $stmt->execute([
@@ -169,6 +171,7 @@ switch ($method) {
             floatval($input['position_lat'] ?? $existing['position_lat']),
             floatval($input['position_lng'] ?? $existing['position_lng']),
             $input['position_desc'] ?? $existing['position_desc'],
+            $input['booking_status'] ?? $existing['booking_status'] ?? 'Ekspor',
             $id
         ]);
 

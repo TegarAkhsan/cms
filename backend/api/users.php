@@ -11,10 +11,10 @@ switch ($method) {
     case 'GET':
         $role = $input['role'] ?? null;
         if ($role) {
-            $stmt = $pdo->prepare("SELECT id, username, role, name, email, port, created_at FROM users WHERE role = ? ORDER BY name");
+            $stmt = $pdo->prepare("SELECT id, username, role, name, email, port, status, created_at FROM users WHERE role = ? ORDER BY name");
             $stmt->execute([$role]);
         } else {
-            $stmt = $pdo->query("SELECT id, username, role, name, email, port, created_at FROM users ORDER BY role, name");
+            $stmt = $pdo->query("SELECT id, username, role, name, email, port, status, created_at FROM users ORDER BY role, name");
         }
         jsonResponse($stmt->fetchAll());
         break;
@@ -42,11 +42,11 @@ switch ($method) {
         if (!$id) jsonResponse(['error' => 'ID wajib diisi'], 400);
 
         if (!empty($input['password'])) {
-            $pdo->prepare("UPDATE users SET name=?,email=?,port=?,role=?,password=? WHERE id=?")
-                ->execute([$input['name']??'', $input['email']??'', $input['port']??'', $input['role']??'stakeholder', password_hash($input['password'], PASSWORD_DEFAULT), $id]);
+            $pdo->prepare("UPDATE users SET name=?,email=?,port=?,role=?,status=?,password=? WHERE id=?")
+                ->execute([$input['name']??'', $input['email']??'', $input['port']??'', $input['role']??'stakeholder', $input['status']??'verified', password_hash($input['password'], PASSWORD_DEFAULT), $id]);
         } else {
-            $pdo->prepare("UPDATE users SET name=?,email=?,port=?,role=? WHERE id=?")
-                ->execute([$input['name']??'', $input['email']??'', $input['port']??'', $input['role']??'stakeholder', $id]);
+            $pdo->prepare("UPDATE users SET name=?,email=?,port=?,role=?,status=? WHERE id=?")
+                ->execute([$input['name']??'', $input['email']??'', $input['port']??'', $input['role']??'stakeholder', $input['status']??'verified', $id]);
         }
         jsonResponse(['success' => true]);
         break;

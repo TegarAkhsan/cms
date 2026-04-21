@@ -584,39 +584,10 @@
                                 </div>
                             </div>
 
-                            <!-- CUSTOM DROPDOWN (Pilih Kota) -->
-                            <div class="input-group" id="kota-group">
-                                <div class="custom-dropdown" id="kota-dropdown">
-                                    <div class="dropdown-trigger" onclick="toggleDropdown()">
-                                        <span id="kota-selected-text">Pilih Kota ...</span>
-                                        <i class="fas fa-building dropdown-icon"></i>
-                                    </div>
-                                    <div class="dropdown-menu">
-                                        <div class="search-box">
-                                            <i class="fas fa-search"></i>
-                                            <input type="text" placeholder="" id="kota-search" onkeyup="filterKota()">
-                                        </div>
-                                        <div class="dropdown-items" id="kota-list">
-                                            <div class="dropdown-group">Bali</div>
-                                            <div class="dropdown-item" onclick="selectKota('Kabupaten Badung')">
-                                                Kabupaten Badung</div>
-                                            <div class="dropdown-item" onclick="selectKota('Kabupaten Bangli')">
-                                                Kabupaten Bangli</div>
-                                            <div class="dropdown-item" onclick="selectKota('Kabupaten Buleleng')">
-                                                Kabupaten Buleleng</div>
-                                            <div class="dropdown-item" onclick="selectKota('Kota Denpasar')">Kota
-                                                Denpasar</div>
-                                            <div class="dropdown-item" onclick="selectKota('Kabupaten Gianyar')">
-                                                Kabupaten Gianyar</div>
-                                            <div class="dropdown-item" onclick="selectKota('Kabupaten Jembrana')">
-                                                Kabupaten Jembrana</div>
-                                            <div class="dropdown-item" onclick="selectKota('Kabupaten Karangasem')">
-                                                Kabupaten Karangasem</div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="error-msg" id="kota-error">
-                                    <i class="fas fa-times-circle"></i> This field is required.
+                            <div class="input-group">
+                                <div class="input-wrapper">
+                                    <input type="text" placeholder="Kota" id="kota">
+                                    <i class="fas fa-city"></i>
                                 </div>
                             </div>
                         </div>
@@ -694,6 +665,18 @@
             </div>
         </div>
 
+        </div>
+
+        <!-- SUCCESS VIEW -->
+        <div id="success-view" style="display: none; text-align: center; padding: 4rem 2rem;">
+            <div style="font-size: 4rem; color: var(--green); margin-bottom: 1rem;">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <h2 style="font-weight: 700; margin-bottom: 1rem;">Registrasi Sukses</h2>
+            <p style="color: var(--text-muted); margin-bottom: 2rem;">Akun Anda telah berhasil didaftarkan. Harap menunggu verifikasi dari admin sebelum Anda dapat login ke dalam sistem.</p>
+            <a href="login.html" class="btn btn-primary" style="text-decoration: none; display: inline-block;">Kembali ke Login</a>
+        </div>
+
     </div>
 
     <script>
@@ -734,84 +717,38 @@
             }
         }
 
-        // Custom Dropdown Logic
-        const dropdown = document.getElementById('kota-dropdown');
-        const kotaInput = document.getElementById('kota-search');
-        let selectedKota = null;
 
-        function toggleDropdown() {
-            dropdown.classList.toggle('open');
-            if (dropdown.classList.contains('open')) {
-                kotaInput.focus();
-            }
-        }
 
-        // Close dropdown when clicking outside
-        document.addEventListener('click', function (event) {
-            if (!dropdown.contains(event.target)) {
-                dropdown.classList.remove('open');
-            }
-        });
+        async function submitRegister() {
+            const name = document.getElementById('nama_lengkap').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const port = document.getElementById('kota').value;
 
-        function filterKota() {
-            const filter = kotaInput.value.toLowerCase();
-            const items = document.getElementsByClassName('dropdown-item');
-
-            for (let i = 0; i < items.length; i++) {
-                const txtValue = items[i].textContent || items[i].innerText;
-                if (txtValue.toLowerCase().indexOf(filter) > -1) {
-                    items[i].style.display = "";
-                } else {
-                    items[i].style.display = "none";
-                }
-            }
-        }
-
-        function selectKota(kota) {
-            selectedKota = kota;
-            const triggerText = document.getElementById('kota-selected-text');
-            triggerText.innerText = kota;
-
-            const trigger = document.querySelector('.dropdown-trigger');
-            trigger.classList.add('has-value');
-
-            // Remove error if exists
-            document.getElementById('kota-group').classList.remove('has-error');
-
-            dropdown.classList.remove('open');
-        }
-
-        function submitRegister() {
-            // Validation example for the Dropdown (required as requested)
-            const kotaGroup = document.getElementById('kota-group');
-            if (!selectedKota) {
-                kotaGroup.classList.add('has-error');
-
-                // Shake animation for error
-                kotaGroup.animate([
-                    { transform: 'translateX(0)' },
-                    { transform: 'translateX(-10px)' },
-                    { transform: 'translateX(10px)' },
-                    { transform: 'translateX(0)' }
-                ], { duration: 400 });
+            if (!name || !email || !password) {
+                alert("Harap lengkapi nama, email, dan password.");
                 return;
             }
 
-            // Simulate proceeding to Step 3 (Selesai)
-            const step3 = document.getElementById('step-3');
-            step3.classList.add('active');
-            step3.classList.add('completed');
-            step3.querySelector('.icon').innerHTML = '<i class="fas fa-check"></i>';
-            step3.querySelector('.icon').style.color = '#fff';
+            try {
+                const response = await fetch('../../backend/api/register.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email, password, port })
+                });
 
-            // Convert step 2 to checkmark if Perusahaan
-            if (document.querySelector('input[name="account_type"]:checked').value === 'perusahaan') {
-                const step2 = document.getElementById('step-2');
-                step2.classList.add('completed');
-                step2.querySelector('.icon').innerHTML = '<i class="fas fa-check"></i>';
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Show success message
+                    document.getElementById('register-view').style.display = 'none';
+                    document.getElementById('success-view').style.display = 'block';
+                } else {
+                    alert(result.error || "Pendaftaran gagal");
+                }
+            } catch (error) {
+                alert("Terjadi kesalahan jaringan.");
             }
-
-            alert("Pendaftaran berhasil diverifikasi! Form valid.");
         }
 
         // --- Forgot Password View Logic ---
