@@ -178,10 +178,11 @@ switch ($method) {
         // Log jika status berubah
         if ($oldStatus !== $newStatus) {
             $labels = [
-                'booking'=>'Booking Diterima','gate_in'=>'Gate-In Terminal',
-                'on_vessel'=>'Di Atas Kapal','discharged'=>'Dibongkar',
-                'clearance'=>'Clearance Bea Cukai','on_delivery'=>'Dalam Pengiriman',
-                'gate_in_depo'=>'Gate-In Depo','completed'=>'Selesai','delay'=>'Delay'
+                'booking'=>'Booking','gate_in'=>'Gate In',
+                'ship_arrival'=>'Ship Arrival','discharge'=>'Discharge',
+                'yard_map'=>'Yard Map','clearance'=>'Clearance',
+                'loading'=>'Loading','ship_departure'=>'Ship Departure',
+                'delivery'=>'Delivery','completed'=>'Selesai'
             ];
             $label   = $labels[$newStatus] ?? $newStatus;
             $ownerId = intval($input['owner_id'] ?? $existing['owner_id']);
