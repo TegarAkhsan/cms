@@ -63,7 +63,16 @@ switch ($method) {
         $filepath = null;
         $filename = $input['filename'] ?? ($type . '_' . $container_id . '.pdf');
 
-        if (!empty($_FILES['file']) && $_FILES['file']['error'] === UPLOAD_ERR_OK) {
+        if (!empty($_FILES['file'])) {
+            if ($_FILES['file']['error'] !== UPLOAD_ERR_OK) {
+                $errCode = $_FILES['file']['error'];
+                $errMsg = 'Gagal upload file (Error Code: ' . $errCode . ').';
+                if ($errCode === UPLOAD_ERR_INI_SIZE || $errCode === UPLOAD_ERR_FORM_SIZE) {
+                    $errMsg = 'Ukuran file terlalu besar! Silakan upload file yang lebih kecil (maksimal aturan server).';
+                }
+                jsonResponse(['error' => $errMsg], 400);
+            }
+
             $uploadDir = __DIR__ . '/../uploads/';
             if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
 
@@ -74,9 +83,12 @@ switch ($method) {
             $dest     = $uploadDir . $filename;
 
             if (!move_uploaded_file($_FILES['file']['tmp_name'], $dest)) {
-                jsonResponse(['error' => 'Gagal menyimpan file'], 500);
+                jsonResponse(['error' => 'Gagal menyimpan file di server. Periksa hak akses folder.'], 500);
             }
             $filepath = 'backend/uploads/' . $filename;
+        } else {
+            // Jika dokumen wajib memiliki file, uncomment ini:
+            // jsonResponse(['error' => 'File dokumen wajib diunggah'], 400);
         }
 
         $status = ($user['role'] === 'stakeholder') ? 'pending' : 'approved';
