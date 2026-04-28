@@ -7,6 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 :root{--bg:#060b18;--bg2:#0a1224;--sidebar:#050a15;--card:#0c1628;--border:rgba(255,255,255,.07);--blue:#2563eb;--cyan:#38bdf8;--green:#10b981;--gold:#f59e0b;--red:#ef4444;--gray:#64748b;--light:#94a3b8;--white:#f1f5f9;--text:#cbd5e1;--font:'Space Grotesk',sans-serif;--mono:'JetBrains Mono',monospace;}
 *{margin:0;padding:0;box-sizing:border-box;}body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex;min-height:100vh;}
@@ -129,10 +130,32 @@
   <div class="content">
 
     <div class="section active" id="sec-dashboard">
-      <div class="stat-grid" id="statGrid"></div>
+      <div class="stat-grid" id="statGrid">
+        <div class="stat-card">
+          <div class="stat-label">Total Kontainer</div>
+          <div class="stat-value" id="kpiTotal">0</div>
+          <div class="stat-icon">📦</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Dalam Perjalanan</div>
+          <div class="stat-value" id="kpiActive" style="color:var(--cyan)">0</div>
+          <div class="stat-icon">🚢</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Selesai</div>
+          <div class="stat-value" id="kpiDone" style="color:var(--green)">0</div>
+          <div class="stat-icon">✅</div>
+        </div>
+      </div>
+      
+      <div class="grid-2">
+        <div class="box"><div class="box-title">Status Kontainer</div><canvas id="statusChart" style="max-height:220px"></canvas></div>
+        <div class="box"><div class="box-title">Ekspor vs Impor</div><canvas id="typeChart" style="max-height:220px"></canvas></div>
+      </div>
+
       <div class="grid-3">
-        <div class="box"><div class="box-title">Kontainer Aktif <span>Klik untuk detail</span></div><div id="ctrCards"></div></div>
-        <div class="box"><div class="box-title">Notifikasi Terbaru</div><div id="dashNotif"></div></div>
+        <div class="box"><div class="box-title">Kontainer Aktif <span>Klik untuk detail</span></div><div id="ctrCards" style="max-height:300px;overflow-y:auto;padding-right:5px"></div></div>
+        <div class="box"><div class="box-title">Notifikasi Terbaru</div><div id="dashNotif" style="max-height:300px;overflow-y:auto;padding-right:5px"></div></div>
       </div>
     </div>
 

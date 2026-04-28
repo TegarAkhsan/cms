@@ -31,17 +31,89 @@ async function showSection(name) {
   if(name==='tracking') await renderTracking();
 }
 
+let statusChartInst = null;
+let typeChartInst = null;
+
 async function renderDashboard() {
-  const [stats, notifs] = await Promise.all([API.getStats(), API.getNotifications()]);
-  document.getElementById('kpiTotal').textContent=stats.total;
-  document.getElementById('kpiActive').textContent=stats.in_transit;
-  document.getElementById('kpiDone').textContent=stats.completed;
+  const [stats, notifs, ctrs] = await Promise.all([API.getStats(), API.getNotifications(), API.getContainers()]);
+  document.getElementById('kpiTotal').textContent=stats.total || ctrs.length;
+  document.getElementById('kpiActive').textContent=stats.in_transit || ctrs.filter(c=>c.status!=='completed').length;
+  document.getElementById('kpiDone').textContent=stats.completed || ctrs.filter(c=>c.status==='completed').length;
+  
   document.getElementById('dashNotif').innerHTML=notifs.notifications.slice(0,4).map(n=>`
     <div class="notif-item ${n.is_read?'':'unread'}">
       <div class="notif-dot" style="background:${(STATUS_CONFIG[n.type]||{}).color||'#64748b'}"></div>
       <div><div style="font-size:12px">${n.message}</div><div style="font-size:10px;color:var(--gray)">${formatDateTime(n.created_at)}</div></div>
     </div>
   `).join('')||'<div style="color:var(--gray);font-size:12px">Tidak ada Notifikasi</div>';
+
+  // Render Active Containers List
+  const activeCtrs = ctrs.filter(c => c.status !== 'completed').slice(0, 5);
+  document.getElementById('ctrCards').innerHTML = activeCtrs.map(c => `
+    <div class="ctr-card" onclick="viewDetail('${c.id}')">
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+        <span class="mono" style="font-size:12px;color:var(--white);font-weight:600;">${c.id}</span>
+        ${statusBadge(c.status)}
+      </div>
+      <div style="font-size:11px;color:var(--gray);margin-bottom:4px">🚢 ${c.vessel}</div>
+      <div style="font-size:11px;color:var(--gray)">📍 ${c.origin} &rarr; ${c.destination}</div>
+    </div>
+  `).join('') || '<div style="color:var(--gray);font-size:12px;text-align:center;padding:20px">Tidak ada kontainer aktif</div>';
+
+  // Prepare Chart Data
+  const statusCounts = {};
+  const typeCounts = { 'Ekspor': 0, 'Impor': 0 };
+  
+  ctrs.forEach(c => {
+    statusCounts[c.status] = (statusCounts[c.status] || 0) + 1;
+    if (c.booking_status === 'Ekspor' || c.booking_status === 'Impor') {
+      typeCounts[c.booking_status]++;
+    }
+  });
+
+  const chartOpts = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'right', labels: { color: '#cbd5e1', font: { family: "'Space Grotesk', sans-serif", size: 10 }, boxWidth: 12 } }
+    }
+  };
+
+  if (statusChartInst) statusChartInst.destroy();
+  const ctxStatus = document.getElementById('statusChart');
+  if (ctxStatus) {
+    statusChartInst = new Chart(ctxStatus.getContext('2d'), {
+      type: 'doughnut',
+      data: {
+        labels: Object.keys(statusCounts).map(k => (STATUS_CONFIG[k] || {}).label || k),
+        datasets: [{
+          data: Object.values(statusCounts),
+          backgroundColor: Object.keys(statusCounts).map(k => (STATUS_CONFIG[k] || {}).color || '#64748b'),
+          borderWidth: 0,
+          hoverOffset: 4
+        }]
+      },
+      options: { ...chartOpts, cutout: '70%' }
+    });
+  }
+
+  if (typeChartInst) typeChartInst.destroy();
+  const ctxType = document.getElementById('typeChart');
+  if (ctxType) {
+    typeChartInst = new Chart(ctxType.getContext('2d'), {
+      type: 'pie',
+      data: {
+        labels: ['Ekspor', 'Impor'],
+        datasets: [{
+          data: [typeCounts['Ekspor'], typeCounts['Impor']],
+          backgroundColor: ['#2563eb', '#10b981'],
+          borderWidth: 0,
+          hoverOffset: 4
+        }]
+      },
+      options: chartOpts
+    });
+  }
 }
 
 async function renderTracking() {
