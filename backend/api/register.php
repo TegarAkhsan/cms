@@ -9,8 +9,12 @@ if ($method !== 'POST') {
 
 $input = getInput();
 $name = trim($input['name'] ?? '');
+$nik = trim($input['nik'] ?? '');
+$npwp = trim($input['npwp'] ?? '');
 $email = trim($input['email'] ?? '');
+$telepon = trim($input['telepon'] ?? '');
 $password = trim($input['password'] ?? '');
+$alamat = trim($input['alamat'] ?? '');
 $port = trim($input['port'] ?? '');
 
 if (!$name || !$email || !$password) {
@@ -31,8 +35,8 @@ $role = 'stakeholder';
 $status = 'pending';
 $username = $email;
 
-$stmt = $pdo->prepare("INSERT INTO users (username, password, role, name, email, port, status) VALUES (?, ?, ?, ?, ?, ?, ?)");
-$stmt->execute([$username, password_hash($password, PASSWORD_DEFAULT), $role, $name, $email, $port, $status]);
+$stmt = $pdo->prepare("INSERT INTO users (username, password, role, name, nik, npwp, email, telepon, alamat, port, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+$stmt->execute([$username, password_hash($password, PASSWORD_DEFAULT), $role, $name, $nik, $npwp, $email, $telepon, $alamat, $port, $status]);
 
 // Create a notification for the admin about the new user
 $userId = $pdo->lastInsertId();

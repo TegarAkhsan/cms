@@ -1,4 +1,4 @@
-let currentUser, mapInstance=null;
+let currentUser, mapInstance=null, editCtrId=null;
 
 document.addEventListener('DOMContentLoaded', async () => {
   const check = await API.check();
@@ -101,9 +101,14 @@ async function renderContainers(page = 1) {
     <td style="font-size:11px;color:var(--gray)">${c.booking_no}</td>
     <td style="font-size:11px">${c.vessel}</td>
     <td style="font-size:11px">${c.commodity}<br><span style="color:var(--gray);font-size:10px">${c.type}</span></td>
+    <td style="font-size:11px">${c.booking_status||'-'}</td>
     <td style="font-size:11px">${formatDate(c.eta)}</td>
     <td>${statusBadge(c.status)}</td>
-    <td><button class="btn btn-ghost btn-sm" onclick="viewDetail('${c.id}')">👁 Detail</button></td></tr>
+    <td>
+      <button class="btn btn-ghost btn-sm" title="View" onclick="viewDetail('${c.id}')">👁</button>
+      <button class="btn btn-ghost btn-sm" title="Edit/Update" onclick="openEditContainer('${c.id}')">✏️</button>
+      <button class="btn btn-danger btn-sm" title="Delete" onclick="deleteContainer('${c.id}')">🗑</button>
+    </td></tr>
   `).join('')||'<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--gray)">Tidak ada data</td></tr>';
   document.getElementById('pg-container').innerHTML = buildPagination(data.length, page, 'renderContainers');
 }
@@ -135,11 +140,14 @@ async function renderDocuments(page = 1) {
     <tr><td class="mono">${d.id}</td>
     <td style="font-size:12px"><span class="mono">${d.container_id}</span><br>${d.vessel||''}</td>
     <td style="font-size:11px">📄 ${d.type}</td>
+    <td style="font-size:11px">${d.booking_status||'-'}</td>
     <td>${docBadge(d.status)}</td>
     <td style="font-size:11px;color:var(--gray)">${formatDate(d.created_at)}</td>
     <td style="font-size:11px;max-width:150px">${d.notes||'-'}</td>
     <td>
-      ${d.filepath ? `<button class="btn btn-ghost btn-sm" onclick="openDocPreview(\'${API.resolveUrl(d.filepath)}\', \'${d.type}\', \'${d.id}\')">👁 View</button>` : ''}
+      ${d.filepath ? `<button class="btn btn-ghost btn-sm" title="View" onclick="openDocPreview(\\'${API.resolveUrl(d.filepath)}\\', \\'${d.type}\\', \\'${d.id}\\')">👁</button>` : `<button class="btn btn-ghost btn-sm" title="Tidak ada file" disabled style="opacity:0.5">👁</button>`}
+      <button class="btn btn-ghost btn-sm" title="Edit/Update" onclick="openEditDoc('${d.id}')">✏️</button>
+      <button class="btn btn-danger btn-sm" title="Delete" onclick="deleteDocument('${d.id}')">🗑</button>
     </td></tr>
   `).join('')||'<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--gray)">Belum ada dokumen</td></tr>';
   document.getElementById('pg-document').innerHTML = buildPagination(filtered.length, page, 'renderDocuments');
@@ -148,25 +156,27 @@ async function renderDocuments(page = 1) {
 async function openAddContainer() {
   const yr = new Date().getFullYear();
   const ctrs = await API.getContainers();
-  const vessels = [...new Set(ctrs.map(c => c.vessel).filter(x => x))];
-  const origins = [...new Set(ctrs.map(c => c.origin).filter(x => x))];
-  const dests = [...new Set(ctrs.map(c => c.destination).filter(x => x))];
-  const types = [...new Set(ctrs.map(c => c.type).filter(x => x))];
-  if (vessels.length > 0) document.getElementById('f_vessel').innerHTML = vessels.map(v => `<option value="${v}">${v}</option>`).join('');
-  if (origins.length > 0) document.getElementById('f_origin').innerHTML = origins.map(o => `<option value="${o}">${o}</option>`).join('');
-  if (dests.length > 0) document.getElementById('f_dest').innerHTML = dests.map(d => `<option value="${d}">${d}</option>`).join('');
-  if (types.length > 0) document.getElementById('f_type').innerHTML = types.map(t => `<option value="${t}">${t}</option>`).join('');
 
   document.getElementById('f_id').value = '';
-  const bkNums = ctrs.map(c => parseInt((c.booking_no||'').replace(/\D/g,''))).filter(n=>!isNaN(n));
-  const bkNext = bkNums.length > 0 ? Math.max(...bkNums) + 1 : 1;
-  document.getElementById('f_booking').value = `BK-${yr}-${String(bkNext).padStart(4,'0')}`;
-  document.getElementById('hint_bk').textContent = `Nomor Booking tahun ${yr}`;
+  editCtrId = null;
+  document.getElementById('f_id').readOnly = false;
+  document.getElementById('modalContainerTitle').textContent = 'Tambah Kontainer';
+
+  const now = new Date();
+  const ymd = now.getFullYear() + String(now.getMonth()+1).padStart(2,'0') + String(now.getDate()).padStart(2,'0');
+  const todayBkNums = ctrs.map(c => {
+     if(c.booking_no && c.booking_no.startsWith(`CMS-${ymd}-`)) return parseInt(c.booking_no.split('-')[2]);
+     return 0;
+  }).filter(n=>!isNaN(n));
+  const bkNext = todayBkNums.length > 0 ? Math.max(...todayBkNums) + 1 : 1;
+  document.getElementById('f_booking').value = `CMS-${ymd}-${String(bkNext).padStart(5,'0')}`;
+  document.getElementById('hint_bk').textContent = `Nomor Booking hari ini`;
   
-  document.getElementById('f_voyage').value = '';
   document.getElementById('f_weight').value = '';
   document.getElementById('f_commodity').value = '';
   document.getElementById('f_eta').value = '';
+  document.getElementById('f_origin').value = '';
+  document.getElementById('f_dest').value = '';
   document.getElementById('modalContainer').classList.add('open');
 }
 
@@ -178,20 +188,51 @@ async function saveContainer() {
     booking_no:   document.getElementById('f_booking').value,
     booking_status: document.getElementById('f_booking_status').value,
     vessel:       document.getElementById('f_vessel').value,
-    voyage:       document.getElementById('f_voyage').value,
     origin:       document.getElementById('f_origin').value,
     destination:  document.getElementById('f_dest').value,
     type:         document.getElementById('f_type').value,
     weight:       parseInt(document.getElementById('f_weight').value)||0,
     commodity:    document.getElementById('f_commodity').value,
-    eta:          document.getElementById('f_eta').value,
-    status:       'booking'
+    eta:          document.getElementById('f_eta').value
   };
-  const res = await API.createContainer(data);
-  if(res.error){alert(res.error);return;}
-  closeModal('modalContainer');
-  await renderContainers();
-  alert('✅ Kontainer berhasil didaftarkan!');
+  if (editCtrId) {
+    data.id = editCtrId;
+    const res = await API.updateContainer(editCtrId, data);
+    if(res.error){alert(res.error);return;}
+    closeModal('modalContainer');
+    await renderContainers();
+    showSuccessModal('Kontainer berhasil diupdate!');
+  } else {
+    data.status = 'booking';
+    const res = await API.createContainer(data);
+    if(res.error){alert(res.error);return;}
+    closeModal('modalContainer');
+    await renderContainers();
+    showSuccessModal('Kontainer berhasil didaftarkan!');
+  }
+}
+
+async function openEditContainer(id) {
+  const c = await API.getContainer(id);
+  editCtrId = id;
+  document.getElementById('modalContainerTitle').textContent = 'Edit Kontainer';
+  document.getElementById('f_id').value = c.id;
+  document.getElementById('f_id').readOnly = true;
+  document.getElementById('f_booking').value = c.booking_no;
+  document.getElementById('f_booking_status').value = c.booking_status || 'Ekspor';
+  document.getElementById('f_vessel').value = c.vessel;
+  document.getElementById('f_origin').value = c.origin;
+  document.getElementById('f_dest').value = c.destination;
+  document.getElementById('f_type').value = c.type;
+  document.getElementById('f_weight').value = c.weight;
+  document.getElementById('f_commodity').value = c.commodity;
+  document.getElementById('f_eta').value = c.eta ? c.eta.split(' ')[0] : '';
+  document.getElementById('modalContainer').classList.add('open');
+}
+
+function showSuccessModal(msg) {
+  document.getElementById('successMsg').textContent = msg;
+  document.getElementById('modalSuccess').classList.add('open');
 }
 
 async function openUploadDoc() {
@@ -214,7 +255,7 @@ async function saveDoc() {
   if(data.error){alert(data.error);return;}
   closeModal('modalUpload');
   await renderDocuments();
-  alert('✅ Dokumen berhasil diupload!');
+  showSuccessModal('Dokumen berhasil diupload!');
 }
 
 async function viewDetail(id) {
@@ -227,9 +268,12 @@ async function viewDetail(id) {
         <div style="display:flex"><div style="width:100px;color:var(--gray)">Komoditi:</div><div>${c.commodity || '-'} (${c.type || '-'})</div></div>
         <div style="display:flex"><div style="width:100px;color:var(--gray)">Berat:</div><div>${Number(c.weight||0).toLocaleString()} kg</div></div>
         <div style="display:flex"><div style="width:100px;color:var(--gray)">Tujuan:</div><div>${c.origin} &rarr; ${c.destination}</div></div>
+        <div style="display:flex"><div style="width:100px;color:var(--gray)">Status Booking:</div><div>${c.booking_status || '-'}</div></div>
+        <div class="box">
+          <div style="font-size:12px;font-weight:700;color:var(--white);margin-bottom:8px">Timeline (${c.booking_status||'Ekspor'})</div>
+          <div class="timeline">${(c.events||[]).map((e,i,a)=>`<div class="tl-item ${i===a.length-1?'active':'done'}"><div class="tl-event">${e.event}</div><div class="tl-meta">${e.actor} · ${formatDateTime(e.timestamp)}</div></div>`).join('')}</div>
+        </div>
     </div>
-    <div style="font-size:12px;font-weight:700;color:var(--white);margin-bottom:8px">Timeline</div>
-    <div class="timeline">${(c.events||[]).map((e,i,a)=>`<div class="tl-item ${i===a.length-1?'active':'done'}"><div class="tl-event">${e.event}</div><div class="tl-meta">${e.actor} · ${formatDateTime(e.timestamp)}</div></div>`).join('')}</div>
   `;
   document.getElementById('modalDetail').classList.add('open');
 }
@@ -264,6 +308,30 @@ async function downloadDocExcel() {
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Laporan Dokumen');
   XLSX.writeFile(wb, `Laporan_Dokumen_CMS_${filterLabel}.xlsx`);
+}
+
+async function deleteContainer(id) {
+  if (!confirm(`Hapus kontainer ${id}?`)) return;
+  const res = await API.deleteContainer(id);
+  if (res.error) { alert(res.error); return; }
+  await renderContainers();
+  alert(`🗑️ Kontainer ${id} berhasil dihapus`);
+}
+
+async function deleteDocument(id) {
+  if (!confirm(`Hapus dokumen ${id}?`)) return;
+  const res = await API.deleteDocument(id);
+  if (res.error) { alert(res.error); return; }
+  await renderDocuments();
+  alert(`🗑️ Dokumen ${id} berhasil dihapus`);
+}
+
+function openEditContainer(id) {
+  alert('Edit Kontainer belum diimplementasikan di mockup ini');
+}
+
+function openEditDoc(id) {
+  alert('Edit Dokumen belum diimplementasikan di mockup ini');
 }
 
 window.openDocPreview = function(filepath, type, id) {

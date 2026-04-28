@@ -150,7 +150,7 @@
       </div>
       <div class="box">
         <table class="data-table">
-          <thead><tr><th>ID</th><th>Booking</th><th>Vessel</th><th>Komoditi</th><th>ETA</th><th>Status</th><th>Detail</th></tr></thead>
+          <thead><tr><th>ID</th><th>Booking</th><th>Vessel</th><th>Komoditi</th><th>Ekspor/Impor</th><th>ETA</th><th>Status</th><th>Detail</th></tr></thead>
           <tbody id="containerTable"></tbody>
         </table>
         <div class="pagination" id="pg-container"></div>
@@ -168,7 +168,7 @@
       </div>
       <div class="box">
         <table class="data-table">
-          <thead><tr><th>ID</th><th>Kontainer</th><th>Tipe</th><th>Status</th><th>Tanggal</th><th>Catatan Operator</th><th>Aksi</th></tr></thead>
+          <thead><tr><th>ID</th><th>Kontainer</th><th>Tipe</th><th>Ekspor/Impor</th><th>Status</th><th>Tanggal</th><th>Catatan Operator</th><th>Aksi</th></tr></thead>
           <tbody id="documentTable"></tbody>
         </table>
         <div class="pagination" id="pg-document"></div>
@@ -207,18 +207,7 @@
       </div>
     </div>
     
-          <div class="form-row">
-        <div class="form-group">
-          <label>Status Booking</label>
-          <select id="f_booking_status">
-            <option value="Ekspor">Ekspor</option>
-            <option value="Impor">Impor</option>
-          </select>
-        </div>
-        <div class="form-group"></div>
-      </div>
-
-<div class="form-row">
+    <div class="form-row">
       <div class="form-group"><label>Nama Kapal (Vessel)</label>
         <select id="f_vessel">
            <option>KM. Nusantara Jaya</option>
@@ -227,20 +216,44 @@
            <option>MV. Cemara Indah</option>
         </select>
       </div>
-      <div class="form-group"><label>Voyage</label><input id="f_voyage" placeholder="NJ-2026-03"></div>
+      <div class="form-group">
+        <label>Status Booking</label>
+        <select id="f_booking_status">
+          <option value="Ekspor">Ekspor</option>
+          <option value="Impor">Impor</option>
+        </select>
+      </div>
     </div>
+    <datalist id="port_list">
+       <option value="Surabaya (Tj. Perak)">
+       <option value="Jakarta (Tj. Priuk)">
+       <option value="Semarang (Tj. Emas)">
+       <option value="Lampung (Pel. Panjang)">
+       <option value="Medan (Belawan)">
+       <option value="Riau (Dumai)">
+       <option value="Banjarmasin (Trisakti)">
+       <option value="Sampit (Bagendang)">
+       <option value="Kalimantan Utara (Tarakan)">
+       <option value="Makassar (Soekarno-Hatta)">
+       <option value="Sulawesi Utara (Bitung)">
+       <option value="Papua Barat (Sorong)">
+       <option value="Tiongkok (Shanghai)">
+       <option value="Singapura (Port Of Singapore)">
+       <option value="Hong kong (Hong Kong)">
+       <option value="Korea Selatan (Busan)">
+       <option value="Belanda (Rotterdam)">
+       <option value="Sydney (Port Botany)">
+       <option value="Malaysia (Port Klang)">
+       <option value="Thailand (Laem Chabang)">
+       <option value="Jepang (Tokyo)">
+    </datalist>
+
     <div class="form-row">
       <div class="form-group"><label>Pelabuhan Asal</label>
-         <select id="f_origin">
-           <option>Jakarta</option><option>Surabaya</option><option>Makassar</option>
-           <option>Batam</option><option>Papua</option>
-         </select>
+         <input id="f_origin" list="port_list" placeholder="Ketik/Pilih Pelabuhan..." autocomplete="off">
       </div>
       <div class="form-group"><label>Pelabuhan Tujuan</label>
-         <select id="f_dest">
-           <option>Surabaya</option><option>Jakarta</option><option>Makassar</option>
-           <option>Batam</option><option>Papua</option>
-         </select>
+         <input id="f_dest" list="port_list" placeholder="Ketik/Pilih Pelabuhan..." autocomplete="off">
       </div>
     </div>
     <div class="form-row">

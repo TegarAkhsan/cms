@@ -38,7 +38,7 @@ switch ($method) {
             array_push($params, $s, $s, $s);
         }
 
-        $sql = "SELECT d.*, u.name AS uploader_name, c.vessel
+        $sql = "SELECT d.*, u.name AS uploader_name, c.vessel, c.booking_status
                 FROM documents d
                 LEFT JOIN users u ON d.uploaded_by = u.id
                 LEFT JOIN containers c ON d.container_id = c.id";

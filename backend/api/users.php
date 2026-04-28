@@ -11,10 +11,10 @@ switch ($method) {
     case 'GET':
         $role = $input['role'] ?? null;
         if ($role) {
-            $stmt = $pdo->prepare("SELECT id, username, role, name, email, port, status, created_at FROM users WHERE role = ? ORDER BY name");
+            $stmt = $pdo->prepare("SELECT id, username, role, name, nik, npwp, telepon, alamat, email, port, status, created_at FROM users WHERE role = ? ORDER BY name");
             $stmt->execute([$role]);
         } else {
-            $stmt = $pdo->query("SELECT id, username, role, name, email, port, status, created_at FROM users ORDER BY role, name");
+            $stmt = $pdo->query("SELECT id, username, role, name, nik, npwp, telepon, alamat, email, port, status, created_at FROM users ORDER BY role, name");
         }
         jsonResponse($stmt->fetchAll());
         break;
@@ -31,8 +31,8 @@ switch ($method) {
         $check->execute([$username]);
         if ($check->fetch()) jsonResponse(['error' => 'Username sudah digunakan'], 409);
 
-        $pdo->prepare("INSERT INTO users (username,password,role,name,email,port) VALUES (?,?,?,?,?,?)")
-            ->execute([$username, password_hash($password, PASSWORD_DEFAULT), $role, $name, $input['email'] ?? '', $input['port'] ?? '']);
+        $pdo->prepare("INSERT INTO users (username,password,role,name,nik,npwp,telepon,alamat,email,port) VALUES (?,?,?,?,?,?,?,?,?,?)")
+            ->execute([$username, password_hash($password, PASSWORD_DEFAULT), $role, $name, $input['nik'] ?? '', $input['npwp'] ?? '', $input['telepon'] ?? '', $input['alamat'] ?? '', $input['email'] ?? '', $input['port'] ?? '']);
 
         jsonResponse(['success' => true, 'id' => $pdo->lastInsertId()]);
         break;
@@ -42,11 +42,11 @@ switch ($method) {
         if (!$id) jsonResponse(['error' => 'ID wajib diisi'], 400);
 
         if (!empty($input['password'])) {
-            $pdo->prepare("UPDATE users SET name=?,email=?,port=?,role=?,status=?,password=? WHERE id=?")
-                ->execute([$input['name']??'', $input['email']??'', $input['port']??'', $input['role']??'stakeholder', $input['status']??'verified', password_hash($input['password'], PASSWORD_DEFAULT), $id]);
+            $pdo->prepare("UPDATE users SET name=?,nik=?,npwp=?,telepon=?,alamat=?,email=?,port=?,role=?,status=?,password=? WHERE id=?")
+                ->execute([$input['name']??'', $input['nik']??'', $input['npwp']??'', $input['telepon']??'', $input['alamat']??'', $input['email']??'', $input['port']??'', $input['role']??'stakeholder', $input['status']??'verified', password_hash($input['password'], PASSWORD_DEFAULT), $id]);
         } else {
-            $pdo->prepare("UPDATE users SET name=?,email=?,port=?,role=?,status=? WHERE id=?")
-                ->execute([$input['name']??'', $input['email']??'', $input['port']??'', $input['role']??'stakeholder', $input['status']??'verified', $id]);
+            $pdo->prepare("UPDATE users SET name=?,nik=?,npwp=?,telepon=?,alamat=?,email=?,port=?,role=?,status=? WHERE id=?")
+                ->execute([$input['name']??'', $input['nik']??'', $input['npwp']??'', $input['telepon']??'', $input['alamat']??'', $input['email']??'', $input['port']??'', $input['role']??'stakeholder', $input['status']??'verified', $id]);
         }
         jsonResponse(['success' => true]);
         break;

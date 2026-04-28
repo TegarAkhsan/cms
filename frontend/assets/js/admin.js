@@ -115,8 +115,10 @@ async function renderDashboard() {
   });
 
   document.getElementById('recentTable').innerHTML = ctrs.slice(0,5).map(c =>
-    `<tr><td class="mono">${c.id}</td><td style="font-size:11px">${c.vessel}</td>
-    <td style="font-size:10px;color:var(--gray)">${c.origin}→${c.destination}</td>
+    `<tr><td class="mono">${c.id}</td>
+    <td style="font-size:11px">${c.booking_no}</td>
+    <td style="font-size:11px">${c.vessel}</td>
+    <td style="font-size:11px">${c.booking_status||'-'}</td>
     <td>${statusBadge(c.status)}</td></tr>`
   ).join('');
 
@@ -182,7 +184,7 @@ async function viewDetail(id) {
     ${(c.documents||[]).map(d=>`<div style="display:flex;justify-content:space-between;padding:8px;background:rgba(255,255,255,.03);border-radius:8px;margin-bottom:5px">
       <span style="font-size:12px">📄 ${d.type}</span>${docBadge(d.status)}</div>`).join('')
       || '<div style="font-size:12px;color:var(--gray);margin-bottom:10px">Belum ada dokumen</div>'}
-    <div style="font-size:12px;font-weight:700;color:var(--white);margin:12px 0 8px">📍 Timeline</div>
+    <div style="font-size:12px;font-weight:700;color:var(--white);margin:12px 0 8px">Timeline (${c.booking_status||'Ekspor'})</div>
     <div class="timeline">${(c.events||[]).map((e,i,a)=>
       `<div class="tl-item ${i===a.length-1?'active':'done'}">
         <div class="tl-event">${e.event}</div>
@@ -221,15 +223,17 @@ async function renderDocuments(page = 1) {
       <td class="mono">${d.id}</td>
       <td><span class="mono">${d.container_id}</span><br><span style="font-size:10px;color:var(--gray)">${d.vessel||''}</span></td>
       <td style="font-size:12px">📄 ${d.type}</td>
+      <td style="font-size:11px">${d.booking_status||'-'}</td>
       <td>${docBadge(d.status)}</td>
       <td style="font-size:11px;color:var(--gray)">${formatDateTime(d.created_at)}</td>
       <td style="font-size:11px;max-width:160px">${d.notes||'-'}</td>
       <td style="white-space:nowrap">
-        ${d.filepath ? `<button class="btn btn-ghost btn-sm" onclick="openDocPreview(\'${API.resolveUrl(d.filepath)}\', \'${d.type}\', \'${d.id}\')">👁 Preview</button>` : '<span style="font-size:10px;color:var(--gray)">Tidak ada file</span>'}
-        <button class="btn btn-ghost btn-sm" onclick="openDocStatus('${d.id}','${d.status}','${d.type}')">✏️ Update</button>
+        ${d.filepath ? `<button class="btn btn-ghost btn-sm" title="View" onclick="openDocPreview('${API.resolveUrl(d.filepath).replace(/'/g, "\\'")}', '${d.type.replace(/'/g, "\\'")}', '${d.id.replace(/'/g, "\\'")}')">👁</button>` : `<button class="btn btn-ghost btn-sm" title="Tidak ada file" disabled style="opacity:0.5">👁</button>`}
+        <button class="btn btn-ghost btn-sm" title="Edit/Update" onclick="openDocStatus('${d.id}','${d.status}','${d.type}')">✏️</button>
+        <button class="btn btn-danger btn-sm" title="Delete" onclick="deleteDocument('${d.id}')">🗑</button>
       </td>
     </tr>`
-  ).join('') || `<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--gray)">Tidak ada dokumen</td></tr>`;
+  ).join('') || `<tr><td colspan="8" style="text-align:center;padding:30px;color:var(--gray)">Tidak ada dokumen</td></tr>`;
   document.getElementById('pg-document').innerHTML = buildPagination(filtered.length, page, 'renderDocuments');
 }
 
@@ -484,6 +488,7 @@ async function renderReports() {
       <td class="mono">${c.id}</td>
       <td style="font-size:11px;color:var(--gray)">${c.booking_no||'-'}</td>
       <td style="font-size:11px">${c.vessel||'-'}</td>
+      <td style="font-size:11px">${c.booking_status||'-'}</td>
       <td style="font-size:11px">${c.origin||'-'}</td>
       <td style="font-size:11px">${c.destination||'-'}</td>
       <td style="font-size:11px">${c.type||'-'}</td>

@@ -101,7 +101,7 @@ switch ($method) {
             $id,
             $input['booking_no']    ?? '',
             $input['vessel']        ?? '',
-            $input['voyage']        ?? '',
+            '-',
             $input['type']          ?? '20ft Dry',
             intval($input['weight'] ?? 0),
             $input['commodity']     ?? '',
@@ -158,7 +158,7 @@ switch ($method) {
         $stmt->execute([
             $input['booking_no']    ?? $existing['booking_no'],
             $input['vessel']        ?? $existing['vessel'],
-            $input['voyage']        ?? $existing['voyage'],
+            '-',
             $input['type']          ?? $existing['type'],
             intval($input['weight'] ?? $existing['weight']),
             $input['commodity']     ?? $existing['commodity'],

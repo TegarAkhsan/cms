@@ -186,7 +186,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
       </div>
       <div class="grid-3">
         <div class="box"><div class="box-title">Kontainer Terbaru</div>
-          <table class="data-table"><thead><tr><th>ID</th><th>Vessel</th><th>Rute</th><th>Status</th></tr></thead><tbody id="recentTable"></tbody></table>
+          <table class="data-table"><thead><tr><th>ID</th><th>Booking</th><th>Vessel</th><th>Ekspor/Impor</th><th>Status</th></tr></thead><tbody id="recentTable"></tbody></table>
         </div>
         <div class="box"><div class="box-title">Notifikasi Terbaru</div><div id="dashNotifList"></div></div>
       </div>
@@ -213,7 +213,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
       </div>
       <div class="box">
         <table class="data-table">
-          <thead><tr><th>ID</th><th>Booking</th><th>Vessel</th><th>Rute</th><th>Komoditi</th><th>Status</th><th>Lokasi</th><th>Aksi</th></tr></thead>
+          <thead><tr><th>ID</th><th>Booking</th><th>Vessel</th><th>Rute</th><th>Komoditi</th><th>Ekspor/Impor</th><th>Status</th><th>Lokasi</th><th>Aksi</th></tr></thead>
           <tbody id="containerTable"></tbody>
         </table>
         <div class="pagination" id="pg-container"></div>
@@ -238,7 +238,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
       </div>
       <div class="box">
         <table class="data-table">
-          <thead><tr><th>ID</th><th>Kontainer</th><th>Tipe</th><th>Status</th><th>Tanggal</th><th>Catatan</th><th>Aksi</th></tr></thead>
+          <thead><tr><th>ID</th><th>Kontainer</th><th>Tipe</th><th>Ekspor/Impor</th><th>Status</th><th>Tanggal</th><th>Catatan</th><th>Aksi</th></tr></thead>
           <tbody id="documentTable"></tbody>
         </table>
         <div class="pagination" id="pg-document"></div>
@@ -357,7 +357,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
 
 <!-- MODAL: Tambah/Edit Pengguna -->
 <div class="modal-overlay" id="modalUser">
-  <div class="modal" style="width:480px">
+  <div class="modal" style="width:600px">
     <h3 id="modalUserTitle">Tambah Pengguna</h3>
     <p class="sub">Data akun pengguna sistem CMS</p>
     <div class="form-row">
@@ -376,11 +376,43 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
     </div>
     <div class="form-row">
       <div class="form-group"><label>Email</label><input id="u_email" type="email" placeholder="email@contoh.com"></div>
-      <div class="form-group"><label>Port / Perusahaan</label><input id="u_port" placeholder="Tanjung Perak / PT. XYZ"></div>
+      <div class="form-group"><label>Telepon</label><input id="u_telepon" placeholder="Nomor Telepon"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>NIK</label><input id="u_nik" placeholder="Nomor Induk Kependudukan"></div>
+      <div class="form-group"><label>NPWP</label><input id="u_npwp" placeholder="NPWP Pribadi/Perusahaan"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Kota / Port</label><input id="u_port" placeholder="Kota / Port"></div>
+      <div class="form-group"><label>Alamat</label><input id="u_alamat" placeholder="Alamat Lengkap"></div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('modalUser')">Batal</button>
       <button class="btn btn-primary" onclick="saveUser()">💾 Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Verifikasi Pengguna -->
+<div class="modal-overlay" id="modalVerifyUser">
+  <div class="modal" style="width:600px">
+    <h3>Verifikasi Pendaftaran Pengguna</h3>
+    <p class="sub">Periksa kelengkapan data sebelum menyetujui akun.</p>
+    <div style="background:rgba(255,255,255,.03); border:1px solid var(--border); border-radius:12px; padding:16px; margin-bottom:16px;">
+      <div class="grid-2">
+        <div><label style="color:var(--gray); font-size:10px;">NAMA LENGKAP</label><div id="v_name" style="font-weight:600; font-size:13px; margin-bottom:8px;">-</div></div>
+        <div><label style="color:var(--gray); font-size:10px;">USERNAME</label><div id="v_username" style="font-weight:600; font-size:13px; margin-bottom:8px;">-</div></div>
+        <div><label style="color:var(--gray); font-size:10px;">EMAIL</label><div id="v_email" style="font-weight:600; font-size:13px; margin-bottom:8px;">-</div></div>
+        <div><label style="color:var(--gray); font-size:10px;">TELEPON</label><div id="v_telepon" style="font-weight:600; font-size:13px; margin-bottom:8px;">-</div></div>
+        <div><label style="color:var(--gray); font-size:10px;">NIK</label><div id="v_nik" style="font-weight:600; font-size:13px; margin-bottom:8px;">-</div></div>
+        <div><label style="color:var(--gray); font-size:10px;">NPWP</label><div id="v_npwp" style="font-weight:600; font-size:13px; margin-bottom:8px;">-</div></div>
+        <div><label style="color:var(--gray); font-size:10px;">KOTA / PORT</label><div id="v_port" style="font-weight:600; font-size:13px; margin-bottom:8px;">-</div></div>
+        <div><label style="color:var(--gray); font-size:10px;">ALAMAT</label><div id="v_alamat" style="font-weight:600; font-size:13px; margin-bottom:8px;">-</div></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modalVerifyUser')">Batal</button>
+      <button class="btn btn-success" id="btnVerifyConfirm">✔️ Verifikasi</button>
     </div>
   </div>
 </div>
