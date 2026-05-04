@@ -91,6 +91,19 @@ switch ($method) {
         $check->execute([$id]);
         if ($check->fetch()) jsonResponse(['error' => 'ID kontainer sudah digunakan'], 409);
 
+        $owner_id = null;
+        $operator_id = null;
+        if ($user['role'] === 'stakeholder') {
+            $owner_id = $user['id'];
+            $operator_id = intval($input['operator_id'] ?? 2) ?: 2; // Default to operator 2
+        } elseif ($user['role'] === 'operator') {
+            $owner_id = intval($input['owner_id'] ?? 0) ?: null;
+            $operator_id = $user['id'];
+        } else {
+            $owner_id = intval($input['owner_id'] ?? 0) ?: null;
+            $operator_id = intval($input['operator_id'] ?? 2) ?: 2;
+        }
+
         $stmt = $pdo->prepare("
             INSERT INTO containers 
             (id, booking_no, vessel, voyage, type, weight, commodity, origin, destination, eta,
@@ -109,8 +122,8 @@ switch ($method) {
             $input['destination']   ?? '',
             $input['eta']           ?: null,
             $input['status']        ?? 'booking',
-            intval($input['owner_id']    ?? 0) ?: null,
-            intval($input['operator_id'] ?? $user['id']),
+            $owner_id,
+            $operator_id,
             floatval($input['position_lat'] ?? -7.2575),
             floatval($input['position_lng'] ?? 112.7521),
             $input['position_desc'] ?? '',

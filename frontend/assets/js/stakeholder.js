@@ -217,7 +217,7 @@ async function renderDocuments(page = 1) {
     <td style="font-size:11px;color:var(--gray)">${formatDate(d.created_at)}</td>
     <td style="font-size:11px;max-width:150px">${d.notes||'-'}</td>
     <td>
-      ${d.filepath ? `<button class="btn btn-ghost btn-sm" title="View" onclick="openDocPreview(\\'${API.resolveUrl(d.filepath)}\\', \\'${d.type}\\', \\'${d.id}\\')">👁</button>` : `<button class="btn btn-ghost btn-sm" title="Tidak ada file" disabled style="opacity:0.5">👁</button>`}
+      ${d.filepath ? `<button class="btn btn-ghost btn-sm" title="View" onclick="openDocPreview('${API.resolveUrl(d.filepath).replace(/'/g, "\\'")}', '${d.type.replace(/'/g, "\\'")}', '${d.id.replace(/'/g, "\\'")}')">👁</button>` : `<button class="btn btn-ghost btn-sm" title="Tidak ada file" disabled style="opacity:0.5">👁</button>`}
       <button class="btn btn-ghost btn-sm" title="Edit/Update" onclick="openEditDoc('${d.id}')">✏️</button>
       <button class="btn btn-danger btn-sm" title="Delete" onclick="deleteDocument('${d.id}')">🗑</button>
     </td></tr>
@@ -419,8 +419,53 @@ function openEditContainer(id) {
   alert('Edit Kontainer belum diimplementasikan di mockup ini');
 }
 
-function openEditDoc(id) {
-  alert('Edit Dokumen belum diimplementasikan di mockup ini');
+let editDocId = null;
+
+async function openEditDoc(id) {
+  const doc = _allDocData.find(d => d.id === id);
+  if (!doc) { alert('Dokumen tidak ditemukan'); return; }
+
+  editDocId = id;
+  document.getElementById('editDocContainer').innerHTML = `<option value="${doc.container_id}">${doc.container_id}</option>`;
+  document.getElementById('editDocType').value = doc.type;
+  document.getElementById('editDocNotes').value = doc.notes || '';
+  document.getElementById('editDocFile').value = ''; 
+  
+  document.getElementById('modalEditDoc').classList.add('open');
+}
+
+let isSubmittingEditDoc = false;
+async function submitEditDoc() {
+  if (isSubmittingEditDoc) return;
+  isSubmittingEditDoc = true;
+  try {
+    const doc = _allDocData.find(d => d.id === editDocId);
+    if (!doc) return;
+    
+    const formData = new FormData();
+    formData.append('id', editDocId);
+    formData.append('container_id', doc.container_id);
+    formData.append('type', document.getElementById('editDocType').value);
+    formData.append('notes', document.getElementById('editDocNotes').value);
+    
+    const fileInput = document.getElementById('editDocFile');
+    if (fileInput.files[0]) {
+      formData.append('file', fileInput.files[0]);
+    }
+    
+    const res = await fetch(API.base + '/documents.php', { method: 'POST', credentials: 'include', body: formData });
+    const data = await res.json();
+    
+    if (data.error) { alert(data.error); return; }
+    
+    closeModal('modalEditDoc');
+    await renderDocuments();
+    showSuccessModal('Dokumen berhasil diupdate!');
+  } catch (err) {
+    alert('Terjadi kesalahan jaringan');
+  } finally {
+    isSubmittingEditDoc = false;
+  }
 }
 
 window.openDocPreview = function(filepath, type, id) {

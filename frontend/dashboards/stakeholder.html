@@ -300,6 +300,43 @@
   </div>
 </div>
 
+<!-- MODAL: Edit Dokumen -->
+<div class="modal-overlay" id="modalEditDoc">
+  <div class="modal" style="width:480px">
+    <h3>Edit Dokumen</h3>
+    <p class="sub">Perbarui informasi atau ganti file dokumen</p>
+    <div class="form-group">
+      <label>Kontainer</label>
+      <select id="editDocContainer" disabled style="opacity:0.7;"></select>
+    </div>
+    <div class="form-group">
+      <label>Tipe Dokumen</label>
+      <select id="editDocType">
+        <option>Invoice</option>
+        <option>Packing List</option>
+        <option>Customs Declaration</option>
+        <option>Certificate of Origin</option>
+        <option>Bukti Pembayaran</option>
+        <option>Surat Izin</option>
+        <option>Bill of Lading</option>
+        <option>Surat Jalan</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Upload File Baru (Opsional)</label>
+      <input type="file" id="editDocFile" accept=".pdf,.jpg,.jpeg,.png" style="padding:8px">
+    </div>
+    <div class="form-group">
+      <label>Catatan Tambahan</label>
+      <textarea id="editDocNotes" placeholder="Keterangan tambahan..."></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modalEditDoc')">Batal</button>
+      <button class="btn btn-primary" onclick="submitEditDoc()">Simpan Perubahan</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL: Detail -->
 <div class="modal-overlay" id="modalDetail">
   <div class="modal" style="width:700px">

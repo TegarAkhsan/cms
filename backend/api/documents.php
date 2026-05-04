@@ -60,8 +60,24 @@ switch ($method) {
         $container = $stmt->fetch();
         if (!$container) jsonResponse(['error' => 'Kontainer tidak ditemukan'], 404);
 
-        $filepath = null;
-        $filename = $input['filename'] ?? ($type . '_' . $container_id . '.pdf');
+        $docId = $input['id'] ?? null;
+        $isEdit = !empty($docId);
+
+        if ($isEdit) {
+            $stmt = $pdo->prepare("SELECT * FROM documents WHERE id = ?");
+            $stmt->execute([$docId]);
+            $existingDoc = $stmt->fetch();
+            if (!$existingDoc) jsonResponse(['error' => 'Dokumen tidak ditemukan'], 404);
+            if ($user['role'] === 'stakeholder' && $existingDoc['status'] === 'approved') {
+                jsonResponse(['error' => 'Dokumen yang sudah disetujui tidak dapat diedit'], 403);
+            }
+            if ($user['role'] === 'stakeholder' && $existingDoc['uploaded_by'] != $user['id']) {
+                jsonResponse(['error' => 'Akses ditolak'], 403);
+            }
+        }
+
+        $filepath = $isEdit ? $existingDoc['filepath'] : null;
+        $filename = $input['filename'] ?? ($isEdit ? $existingDoc['filename'] : ($type . '_' . $container_id . '.pdf'));
 
         if (!empty($_FILES['file'])) {
             if ($_FILES['file']['error'] !== UPLOAD_ERR_OK) {
@@ -86,16 +102,18 @@ switch ($method) {
                 jsonResponse(['error' => 'Gagal menyimpan file di server. Periksa hak akses folder.'], 500);
             }
             $filepath = 'backend/uploads/' . $filename;
-        } else {
-            // Jika dokumen wajib memiliki file, uncomment ini:
-            // jsonResponse(['error' => 'File dokumen wajib diunggah'], 400);
         }
 
         $status = ($user['role'] === 'stakeholder') ? 'pending' : 'approved';
-        $docId  = genId('DOC');
 
-        $pdo->prepare("INSERT INTO documents (id,container_id,type,filename,filepath,status,uploaded_by,notes) VALUES (?,?,?,?,?,?,?,?)")
-            ->execute([$docId, $container_id, $type, $filename, $filepath, $status, $user['id'], $input['notes'] ?? '']);
+        if ($isEdit) {
+            $pdo->prepare("UPDATE documents SET container_id=?, type=?, filename=?, filepath=?, status=?, notes=? WHERE id=?")
+                ->execute([$container_id, $type, $filename, $filepath, $status, $input['notes'] ?? '', $docId]);
+        } else {
+            $docId  = genId('DOC');
+            $pdo->prepare("INSERT INTO documents (id,container_id,type,filename,filepath,status,uploaded_by,notes) VALUES (?,?,?,?,?,?,?,?)")
+                ->execute([$docId, $container_id, $type, $filename, $filepath, $status, $user['id'], $input['notes'] ?? '']);
+        }
 
         // Notif ke operator jika stakeholder upload
         if ($user['role'] === 'stakeholder' && $container['operator_id']) {
