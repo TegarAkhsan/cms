@@ -223,23 +223,26 @@
 
 
 
+        let isRegistering = false;
         async function submitRegister() {
-            const isPerusahaan = document.querySelector('input[name="account_type"]:checked').value === 'perusahaan';
-            const name = document.getElementById('nama_lengkap').value;
-            const nik = document.getElementById('nik').value;
-            const npwp = isPerusahaan ? document.getElementById('npwp_perusahaan').value : document.getElementById('npwp_pribadi').value;
-            const email = document.getElementById('email').value;
-            const telepon = document.getElementById('telepon').value;
-            const password = document.getElementById('password').value;
-            const alamat = isPerusahaan ? document.getElementById('alamat_perusahaan').value : document.getElementById('alamat_pengguna').value;
-            const port = document.getElementById('kota').value;
-
-            if (!name || !email || !password) {
-                alert("Harap lengkapi nama, email, dan password.");
-                return;
-            }
-
+            if (isRegistering) return;
+            isRegistering = true;
             try {
+                const isPerusahaan = document.querySelector('input[name="account_type"]:checked').value === 'perusahaan';
+                const name = document.getElementById('nama_lengkap').value;
+                const nik = document.getElementById('nik').value;
+                const npwp = isPerusahaan ? document.getElementById('npwp_perusahaan').value : document.getElementById('npwp_pribadi').value;
+                const email = document.getElementById('email').value;
+                const telepon = document.getElementById('telepon').value;
+                const password = document.getElementById('password').value;
+                const alamat = isPerusahaan ? document.getElementById('alamat_perusahaan').value : document.getElementById('alamat_pengguna').value;
+                const port = document.getElementById('kota').value;
+
+                if (!name || !email || !password) {
+                    alert("Harap lengkapi nama, email, dan password.");
+                    return;
+                }
+
                 const response = await fetch('../../backend/api/register.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -257,6 +260,8 @@
                 }
             } catch (error) {
                 alert("Terjadi kesalahan jaringan.");
+            } finally {
+                isRegistering = false;
             }
         }
 

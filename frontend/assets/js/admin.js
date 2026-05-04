@@ -245,17 +245,24 @@ function openDocStatus(id, status, type) {
   document.getElementById('modalDocStatus').classList.add('open');
 }
 
+let isSavingDocStatus = false;
 async function saveDocStatus() {
-  const res = await API.updateDocument({
-    id: editingDoc,
-    status: document.getElementById('newDocStatus').value,
-    notes:  document.getElementById('docStatusNote').value,
-  });
-  if (res.error) { showToast(res.error,'error'); return; }
-  closeModal('modalDocStatus');
-  await renderDocuments();
-  await updateBadges();
-  showToast('✅ Status dokumen berhasil diupdate!');
+  if(isSavingDocStatus) return;
+  isSavingDocStatus = true;
+  try {
+    const res = await API.updateDocument({
+      id: editingDoc,
+      status: document.getElementById('newDocStatus').value,
+      notes:  document.getElementById('docStatusNote').value,
+    });
+    if (res.error) { showToast(res.error,'error'); return; }
+    closeModal('modalDocStatus');
+    await renderDocuments();
+    await updateBadges();
+    showToast('✅ Status dokumen berhasil diupdate!');
+  } finally {
+    isSavingDocStatus = false;
+  }
 }
 
 // ── LIVE TRACKING
@@ -351,13 +358,20 @@ async function renderUsers() {
   ).join('');
 }
 
+let isVerifyingUser = false;
 async function verifyUser(id, name, email, port, role) {
-  if (!confirm('Verifikasi pengguna ini?')) return;
-  const data = { id: id, name: name, email: email, port: port, role: role, status: 'verified' };
-  const res = await API.updateUser(data);
-  if (res.error) { showToast(res.error, 'error'); return; }
-  await renderUsers();
-  showToast('✅ Pengguna berhasil diverifikasi!');
+  if(isVerifyingUser) return;
+  isVerifyingUser = true;
+  try {
+    if (!confirm('Verifikasi pengguna ini?')) return;
+    const data = { id: id, name: name, email: email, port: port, role: role, status: 'verified' };
+    const res = await API.updateUser(data);
+    if (res.error) { showToast(res.error, 'error'); return; }
+    await renderUsers();
+    showToast('✅ Pengguna berhasil diverifikasi!');
+  } finally {
+    isVerifyingUser = false;
+  }
 }
 
 function openAddUser() {
@@ -380,21 +394,28 @@ function openEditUser(id, username, name, role, email, port) {
   document.getElementById('modalUser').classList.add('open');
 }
 
+let isSavingUser = false;
 async function saveUser() {
-  const data = {
-    id:       editingUser,
-    username: document.getElementById('u_username').value,
-    password: document.getElementById('u_password').value,
-    name:     document.getElementById('u_name').value,
-    role:     document.getElementById('u_role').value,
-    email:    document.getElementById('u_email').value,
-    port:     document.getElementById('u_port').value,
-  };
-  const res = editingUser ? await API.updateUser(data) : await API.createUser(data);
-  if (res.error) { showToast(res.error,'error'); return; }
-  closeModal('modalUser');
-  await renderUsers();
-  showToast(editingUser ? '✅ Pengguna berhasil diupdate!' : '✅ Pengguna baru berhasil ditambahkan!');
+  if(isSavingUser) return;
+  isSavingUser = true;
+  try {
+    const data = {
+      id:       editingUser,
+      username: document.getElementById('u_username').value,
+      password: document.getElementById('u_password').value,
+      name:     document.getElementById('u_name').value,
+      role:     document.getElementById('u_role').value,
+      email:    document.getElementById('u_email').value,
+      port:     document.getElementById('u_port').value,
+    };
+    const res = editingUser ? await API.updateUser(data) : await API.createUser(data);
+    if (res.error) { showToast(res.error,'error'); return; }
+    closeModal('modalUser');
+    await renderUsers();
+    showToast(editingUser ? '✅ Pengguna berhasil diupdate!' : '✅ Pengguna baru berhasil ditambahkan!');
+  } finally {
+    isSavingUser = false;
+  }
 }
 
 async function deleteUser(id) {

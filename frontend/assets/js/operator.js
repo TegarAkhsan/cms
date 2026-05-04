@@ -131,18 +131,25 @@ async function openUpdateStatus(id) {
   document.getElementById('modalStatus').classList.add('open');
 }
 
+let isSavingStatus = false;
 async function saveStatus() {
-  const res = await API.updateContainer({
-    id:editingCtrId, status:document.getElementById('newStatus').value,
-    position_desc:document.getElementById('newPosDesc').value,
-    position_lat:document.getElementById('newLat').value,
-    position_lng:document.getElementById('newLng').value,
-    note:document.getElementById('statusNote').value,
-  });
-  if(res.error){alert(res.error);return;}
-  closeModal('modalStatus');
-  await renderDashboard(); await renderContainers(); await updateBadges();
-  alert('✅ Status berhasil diupdate dan sinkron ke semua dashboard!');
+  if(isSavingStatus) return;
+  isSavingStatus = true;
+  try {
+    const res = await API.updateContainer({
+      id:editingCtrId, status:document.getElementById('newStatus').value,
+      position_desc:document.getElementById('newPosDesc').value,
+      position_lat:document.getElementById('newLat').value,
+      position_lng:document.getElementById('newLng').value,
+      note:document.getElementById('statusNote').value,
+    });
+    if(res.error){alert(res.error);return;}
+    closeModal('modalStatus');
+    await renderDashboard(); await renderContainers(); await updateBadges();
+    alert('✅ Status berhasil diupdate dan sinkron ke semua dashboard!');
+  } finally {
+    isSavingStatus = false;
+  }
 }
 
 let _allDocData = [];
@@ -186,9 +193,17 @@ async function renderDocuments(page = 1) {
   document.getElementById('pg-document').innerHTML = buildPagination(filtered.length, page, 'renderDocuments');
 }
 
+let isUpdatingDoc = false;
 async function updateDoc(id, status, notes) {
-  await API.updateDocument({id,status,notes});
-  await renderDocuments(); await updateBadges();
+  if(isUpdatingDoc) return;
+  isUpdatingDoc = true;
+  try {
+    const res = await API.updateDocument({id,status,notes});
+    if(res.error){alert(res.error);return;}
+    await renderDocuments(); await updateBadges();
+  } finally {
+    isUpdatingDoc = false;
+  }
 }
 
 function promptRevision(id) {
@@ -203,20 +218,27 @@ async function openUploadDoc() {
   document.getElementById('modalUpload').classList.add('open');
 }
 
+let isSavingDocOp = false;
 async function saveDoc() {
-  const formData = new FormData();
-  formData.append('container_id', document.getElementById('docContainer').value);
-  formData.append('type', document.getElementById('docType').value);
-  formData.append('notes', document.getElementById('docNotes').value);
-  const fileInput = document.getElementById('docFile');
-  if(fileInput.files[0]) formData.append('file', fileInput.files[0]);
+  if(isSavingDocOp) return;
+  isSavingDocOp = true;
+  try {
+    const formData = new FormData();
+    formData.append('container_id', document.getElementById('docContainer').value);
+    formData.append('type', document.getElementById('docType').value);
+    formData.append('notes', document.getElementById('docNotes').value);
+    const fileInput = document.getElementById('docFile');
+    if(fileInput.files[0]) formData.append('file', fileInput.files[0]);
 
-  const res = await fetch(API.base + '/documents.php', {method:'POST',credentials:'include',body:formData});
-  const data = await res.json();
-  if(data.error){alert(data.error);return;}
-  closeModal('modalUpload');
-  await renderDocuments(); await updateBadges();
-  alert('✅ Dokumen berhasil diupload!');
+    const res = await fetch(API.base + '/documents.php', {method:'POST',credentials:'include',body:formData});
+    const data = await res.json();
+    if(data.error){alert(data.error);return;}
+    closeModal('modalUpload');
+    await renderDocuments(); await updateBadges();
+    alert('✅ Dokumen berhasil diupload!');
+  } finally {
+    isSavingDocOp = false;
+  }
 }
 
 // Yard Data Dummy Simulation
@@ -329,26 +351,40 @@ window.showYardSelDetail = function() {
     }
 };
 
+let isAllocatingYard = false;
 window.allocateYard = async function(blockId) {
-    const sel = document.getElementById('yardSelCtr').value;
-    if(!sel) { alert('Pilih kontainer terlebih dahulu'); return; }
-    
-    // Update API
-    const res = await API.updateContainer({ id: sel, position_desc: `Yard ${blockId}, Tanjung Perak`, status: 'yard_map' });
-    if(res.error) { alert(res.error); return; }
-    
-    closeModal('modalDetail');
-    await renderYard();
-    alert('✅ Kontainer ' + sel + ' berhasil dialokasikan ke Yard ' + blockId);
+    if(isAllocatingYard) return;
+    isAllocatingYard = true;
+    try {
+        const sel = document.getElementById('yardSelCtr').value;
+        if(!sel) { alert('Pilih kontainer terlebih dahulu'); return; }
+        
+        // Update API
+        const res = await API.updateContainer({ id: sel, position_desc: `Yard ${blockId}, Tanjung Perak`, status: 'yard_map' });
+        if(res.error) { alert(res.error); return; }
+        
+        closeModal('modalDetail');
+        await renderYard();
+        alert('✅ Kontainer ' + sel + ' berhasil dialokasikan ke Yard ' + blockId);
+    } finally {
+        isAllocatingYard = false;
+    }
 };
 
+let isRemovingYard = false;
 window.removeFromYard = async function(id, blockId) {
-    if(!confirm('Hapus kontainer ' + id + ' dari Yard ' + blockId + '?')) return;
-    const res = await API.updateContainer({ id: id, position_desc: '' });
-    if(res.error) { alert(res.error); return; }
-    closeModal('modalDetail');
-    await renderYard();
-    alert('✅ Kontainer ' + id + ' berhasil dihapus dari Yard ' + blockId);
+    if(isRemovingYard) return;
+    isRemovingYard = true;
+    try {
+        if(!confirm('Hapus kontainer ' + id + ' dari Yard ' + blockId + '?')) return;
+        const res = await API.updateContainer({ id: id, position_desc: '' });
+        if(res.error) { alert(res.error); return; }
+        closeModal('modalDetail');
+        await renderYard();
+        alert('✅ Kontainer ' + id + ' berhasil dihapus dari Yard ' + blockId);
+    } finally {
+        isRemovingYard = false;
+    }
 };
 
 async function renderTracking() {
