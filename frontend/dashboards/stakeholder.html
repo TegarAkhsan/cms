@@ -1,384 +1,1067 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Stakeholder — CMS</title>
-<link rel="icon" href="data:,">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<style>
-:root{--bg:#060b18;--bg2:#0a1224;--sidebar:#050a15;--card:#0c1628;--border:rgba(255,255,255,.07);--blue:#2563eb;--cyan:#38bdf8;--green:#10b981;--gold:#f59e0b;--red:#ef4444;--gray:#64748b;--light:#94a3b8;--white:#f1f5f9;--text:#cbd5e1;--font:'Space Grotesk',sans-serif;--mono:'JetBrains Mono',monospace;}
-*{margin:0;padding:0;box-sizing:border-box;}body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex;min-height:100vh;}
-.sidebar{width:240px;min-height:100vh;background:var(--sidebar);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;z-index:100;}
-.sidebar-logo{padding:24px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;}
-.sidebar-logo .icon{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--blue),var(--cyan));display:flex;align-items:center;justify-content:center;font-size:18px;}
-.brand{font-size:16px;font-weight:700;color:var(--white);}.sub-role{font-size:10px;color:var(--gray);}
-.sidebar-nav{padding:12px 10px;flex:1;}
-.nav-section{font-size:10px;color:var(--gray);text-transform:uppercase;letter-spacing:1px;font-weight:600;padding:12px 10px 6px;}
-.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;cursor:pointer;transition:all .2s;font-size:13px;color:var(--light);margin-bottom:2px;border:none;background:none;width:100%;text-align:left;}
-.nav-item:hover{background:rgba(255,255,255,.05);color:var(--white);}
-.nav-item.active{background:rgba(37,99,235,.15);color:var(--cyan);border:1px solid rgba(56,189,248,.15);}
-.nav-item .ni{font-size:16px;width:20px;text-align:center;}
-.nb{margin-left:auto;background:var(--red);color:white;border-radius:20px;padding:1px 7px;font-size:10px;font-weight:700;}
-.sidebar-footer{padding:16px;border-top:1px solid var(--border);}
-.user-card{display:flex;align-items:center;gap:10px;padding:10px;background:rgba(255,255,255,.04);border-radius:10px;}
-.user-avatar{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--blue),#6366f1);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:white;}
-.user-name{font-size:12px;font-weight:600;color:var(--white);}.user-role{font-size:10px;color:var(--cyan);}
-.logout-btn{margin-left:auto;background:none;border:none;cursor:pointer;color:var(--gray);font-size:16px;}
-.logout-btn:hover{color:var(--red);}
-.main{margin-left:240px;flex:1;display:flex;flex-direction:column;}
-.topbar{padding:16px 24px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
-.topbar h2{font-size:16px;font-weight:700;color:var(--white);}
-.breadcrumb{font-size:11px;color:var(--gray);}
-.notif-btn{position:relative;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:10px;padding:8px 10px;cursor:pointer;color:var(--light);font-size:16px;}
-.notif-badge{position:absolute;top:-4px;right:-4px;background:var(--red);color:white;border-radius:50%;width:16px;height:16px;font-size:9px;display:flex;align-items:center;justify-content:center;font-weight:700;}
-.content{padding:24px;flex:1;}
-.section{display:none;}.section.active{display:block;}
-.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:16px;margin-bottom:24px;}
-.stat-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;transition:transform .2s;position:relative;overflow:hidden;}
-.stat-card:hover{transform:translateY(-3px);}
-.stat-label{font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:.8px;font-weight:600;margin-bottom:10px;}
-.stat-value{font-size:30px;font-weight:700;color:var(--white);font-family:var(--mono);}
-.stat-icon{position:absolute;bottom:14px;right:16px;font-size:28px;opacity:.3;}
-.box{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:16px;}
-.box-title{font-size:13px;font-weight:700;color:var(--white);margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;}
-.box-title span{font-size:11px;color:var(--gray);font-weight:500;}
-.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
-.grid-3{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:16px;}
-.data-table{width:100%;border-collapse:collapse;font-size:12px;}
-.data-table th{background:rgba(255,255,255,.04);padding:10px 12px;text-align:left;color:var(--gray);font-size:10px;text-transform:uppercase;border-bottom:1px solid var(--border);}
-.data-table td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.03);vertical-align:middle;}
-.data-table tr:hover td{background:rgba(255,255,255,.02);}
-.mono{font-family:var(--mono);font-size:11px;color:var(--cyan);}
-.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:600;white-space:nowrap;}
-.btn{padding:8px 16px;border-radius:10px;border:none;cursor:pointer;font-family:var(--font);font-size:12px;font-weight:600;transition:all .2s;display:inline-flex;align-items:center;gap:6px;}
-.btn-primary{background:var(--blue);color:white;}.btn-primary:hover{background:#1d4ed8;}
-.btn-sm{padding:5px 10px;font-size:11px;border-radius:7px;}
-.btn-ghost{background:rgba(255,255,255,.06);color:var(--light);border:1px solid var(--border);}
-.btn-ghost:hover{background:rgba(255,255,255,.1);}
-.filter-bar{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 18px;margin-bottom:16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;}
-.search-input{padding:7px 12px;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:8px;color:var(--white);font-family:var(--font);font-size:12px;outline:none;width:220px;}
-.search-input::placeholder{color:var(--gray);}
-.search-input:focus{border-color:var(--cyan);}
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:999;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
-.modal-overlay.open{display:flex;}
-.modal{background:var(--bg2);border:1px solid var(--border);border-radius:20px;width:640px;max-width:95vw;max-height:90vh;overflow-y:auto;padding:28px;}
-.modal h3{font-size:17px;color:var(--white);margin-bottom:6px;}
-.modal .sub{font-size:12px;color:var(--gray);margin-bottom:22px;}
-.modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--border);}
-.form-group{margin-bottom:14px;}
-.form-group label{display:block;font-size:11px;color:var(--gray);font-weight:600;text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px;}
-.form-group input,.form-group select,.form-group textarea{width:100%;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:10px;padding:10px 12px;color:var(--white);font-family:var(--font);font-size:13px;outline:none;}
-.form-group input:focus,.form-group select:focus{border-color:var(--cyan);}
-.form-group select option{background:var(--bg2);}
-.form-group textarea{resize:vertical;min-height:80px;}
-.notif-item{display:flex;gap:12px;padding:12px 14px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px;margin-bottom:8px;cursor:pointer;}
-.notif-item.unread{border-color:rgba(56,189,248,.2);background:rgba(56,189,248,.04);}
-.notif-dot{width:8px;height:8px;border-radius:50%;margin-top:4px;flex-shrink:0;}
-.timeline{position:relative;padding-left:24px;}
-.timeline::before{content:'';position:absolute;left:8px;top:6px;bottom:6px;width:2px;background:var(--border);}
-.tl-item{position:relative;padding:0 0 20px 16px;}
-.tl-item::before{content:'';position:absolute;left:-10px;top:4px;width:12px;height:12px;border-radius:50%;border:2px solid var(--border);background:var(--bg2);}
-.tl-item.done::before{background:var(--green);border-color:var(--green);}
-.tl-item.active::before{background:var(--cyan);border-color:var(--cyan);box-shadow:0 0 10px rgba(56,189,248,.5);animation:pulse 2s infinite;}
-@keyframes pulse{0%,100%{box-shadow:0 0 6px rgba(56,189,248,.4)}50%{box-shadow:0 0 14px rgba(56,189,248,.8)}}
-.tl-event{font-size:12px;font-weight:600;color:var(--white);}
-.tl-meta{font-size:10px;color:var(--gray);margin-top:2px;}
-.ctr-card{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px;padding:14px 16px;cursor:pointer;transition:all .2s;margin-bottom:10px;}
-.ctr-card:hover{background:rgba(255,255,255,.06);border-color:rgba(56,189,248,.2);transform:translateX(3px);}
-#trackMap{height:300px;border-radius:12px;}
-::-webkit-scrollbar{width:6px;}::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:3px;}
-/* PAGINATION */
-.pagination{display:flex;justify-content:center;gap:6px;margin-top:16px;}
-.pagination .btn{min-width:30px;padding:5px;text-align:center;}
-.input-autofill{background:rgba(56,189,248,.06)!important;border-color:rgba(56,189,248,.3)!important;color:var(--cyan)!important;font-family:var(--mono)!important;cursor:default;}
-.auto-hint{font-size:10px;color:var(--cyan);margin-top:4px;font-family:var(--mono);}
-.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
-</style>
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stakeholder — CMS</title>
+  <link rel="icon" href="data:,">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --bg: #060b18;
+      --bg2: #0a1224;
+      --sidebar: #050a15;
+      --card: #0c1628;
+      --border: rgba(255, 255, 255, .07);
+      --blue: #2563eb;
+      --cyan: #38bdf8;
+      --green: #10b981;
+      --gold: #f59e0b;
+      --red: #ef4444;
+      --gray: #64748b;
+      --light: #94a3b8;
+      --white: #f1f5f9;
+      --text: #cbd5e1;
+      --font: 'Space Grotesk', sans-serif;
+      --mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      width: 240px;
+      min-height: 100vh;
+      background: var(--sidebar);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 100;
+    }
+
+    .sidebar-logo {
+      padding: 24px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .sidebar-logo .icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--blue), var(--cyan));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+
+    .brand {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--white);
+    }
+
+    .sub-role {
+      font-size: 10px;
+      color: var(--gray);
+    }
+
+    .sidebar-nav {
+      padding: 12px 10px;
+      flex: 1;
+    }
+
+    .nav-section {
+      font-size: 10px;
+      color: var(--gray);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 600;
+      padding: 12px 10px 6px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all .2s;
+      font-size: 13px;
+      color: var(--light);
+      margin-bottom: 2px;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+    }
+
+    .nav-item:hover {
+      background: rgba(255, 255, 255, .05);
+      color: var(--white);
+    }
+
+    .nav-item.active {
+      background: rgba(37, 99, 235, .15);
+      color: var(--cyan);
+      border: 1px solid rgba(56, 189, 248, .15);
+    }
+
+    .nav-item .ni {
+      font-size: 16px;
+      width: 20px;
+      text-align: center;
+    }
+
+    .nb {
+      margin-left: auto;
+      background: var(--red);
+      color: white;
+      border-radius: 20px;
+      padding: 1px 7px;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .sidebar-footer {
+      padding: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .user-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px;
+      background: rgba(255, 255, 255, .04);
+      border-radius: 10px;
+    }
+
+    .user-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--blue), #6366f1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 700;
+      color: white;
+    }
+
+    .user-name {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--white);
+    }
+
+    .user-role {
+      font-size: 10px;
+      color: var(--cyan);
+    }
+
+    .logout-btn {
+      margin-left: auto;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--gray);
+      font-size: 16px;
+    }
+
+    .logout-btn:hover {
+      color: var(--red);
+    }
+
+    .main {
+      margin-left: 240px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .topbar {
+      padding: 16px 24px;
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .topbar h2 {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--white);
+    }
+
+    .breadcrumb {
+      font-size: 11px;
+      color: var(--gray);
+    }
+
+    .notif-btn {
+      position: relative;
+      background: rgba(255, 255, 255, .06);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px 10px;
+      cursor: pointer;
+      color: var(--light);
+      font-size: 16px;
+    }
+
+    .notif-badge {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      background: var(--red);
+      color: white;
+      border-radius: 50%;
+      width: 16px;
+      height: 16px;
+      font-size: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+    }
+
+    .content {
+      padding: 24px;
+      flex: 1;
+    }
+
+    .section {
+      display: none;
+    }
+
+    .section.active {
+      display: block;
+    }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      transition: transform .2s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-3px);
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: var(--gray);
+      text-transform: uppercase;
+      letter-spacing: .8px;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+
+    .stat-value {
+      font-size: 30px;
+      font-weight: 700;
+      color: var(--white);
+      font-family: var(--mono);
+    }
+
+    .stat-icon {
+      position: absolute;
+      bottom: 14px;
+      right: 16px;
+      font-size: 28px;
+      opacity: .3;
+    }
+
+    .box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+
+    .box-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--white);
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .box-title span {
+      font-size: 11px;
+      color: var(--gray);
+      font-weight: 500;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .data-table th {
+      background: rgba(255, 255, 255, .04);
+      padding: 10px 12px;
+      text-align: left;
+      color: var(--gray);
+      font-size: 10px;
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .data-table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, .03);
+      vertical-align: middle;
+    }
+
+    .data-table tr:hover td {
+      background: rgba(255, 255, 255, .02);
+    }
+
+    .mono {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--cyan);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 9px;
+      border-radius: 20px;
+      font-size: 10px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .btn {
+      padding: 8px 16px;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      font-family: var(--font);
+      font-size: 12px;
+      font-weight: 600;
+      transition: all .2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-primary {
+      background: var(--blue);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #1d4ed8;
+    }
+
+    .btn-sm {
+      padding: 5px 10px;
+      font-size: 11px;
+      border-radius: 7px;
+    }
+
+    .btn-ghost {
+      background: rgba(255, 255, 255, .06);
+      color: var(--light);
+      border: 1px solid var(--border);
+    }
+
+    .btn-ghost:hover {
+      background: rgba(255, 255, 255, .1);
+    }
+
+    .filter-bar {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 18px;
+      margin-bottom: 16px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .search-input {
+      padding: 7px 12px;
+      background: rgba(255, 255, 255, .06);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--white);
+      font-family: var(--font);
+      font-size: 12px;
+      outline: none;
+      width: 220px;
+    }
+
+    .search-input::placeholder {
+      color: var(--gray);
+    }
+
+    .search-input:focus {
+      border-color: var(--cyan);
+    }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .7);
+      z-index: 999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(4px);
+    }
+
+    .modal-overlay.open {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      width: 640px;
+      max-width: 95vw;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 28px;
+    }
+
+    .modal h3 {
+      font-size: 17px;
+      color: var(--white);
+      margin-bottom: 6px;
+    }
+
+    .modal .sub {
+      font-size: 12px;
+      color: var(--gray);
+      margin-bottom: 22px;
+    }
+
+    .modal-footer {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .form-group {
+      margin-bottom: 14px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 11px;
+      color: var(--gray);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .6px;
+      margin-bottom: 6px;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      background: rgba(255, 255, 255, .06);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      color: var(--white);
+      font-family: var(--font);
+      font-size: 13px;
+      outline: none;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+      border-color: var(--cyan);
+    }
+
+    .form-group select option {
+      background: var(--bg2);
+    }
+
+    .form-group textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    .notif-item {
+      display: flex;
+      gap: 12px;
+      padding: 12px 14px;
+      background: rgba(255, 255, 255, .03);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      margin-bottom: 8px;
+      cursor: pointer;
+    }
+
+    .notif-item.unread {
+      border-color: rgba(56, 189, 248, .2);
+      background: rgba(56, 189, 248, .04);
+    }
+
+    .notif-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-top: 4px;
+      flex-shrink: 0;
+    }
+
+    .timeline {
+      position: relative;
+      padding-left: 24px;
+    }
+
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 8px;
+      top: 6px;
+      bottom: 6px;
+      width: 2px;
+      background: var(--border);
+    }
+
+    .tl-item {
+      position: relative;
+      padding: 0 0 20px 16px;
+    }
+
+    .tl-item::before {
+      content: '';
+      position: absolute;
+      left: -10px;
+      top: 4px;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+      background: var(--bg2);
+    }
+
+    .tl-item.done::before {
+      background: var(--green);
+      border-color: var(--green);
+    }
+
+    .tl-item.active::before {
+      background: var(--cyan);
+      border-color: var(--cyan);
+      box-shadow: 0 0 10px rgba(56, 189, 248, .5);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        box-shadow: 0 0 6px rgba(56, 189, 248, .4)
+      }
+
+      50% {
+        box-shadow: 0 0 14px rgba(56, 189, 248, .8)
+      }
+    }
+
+    .tl-event {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--white);
+    }
+
+    .tl-meta {
+      font-size: 10px;
+      color: var(--gray);
+      margin-top: 2px;
+    }
+
+    .ctr-card {
+      background: rgba(255, 255, 255, .03);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      cursor: pointer;
+      transition: all .2s;
+      margin-bottom: 10px;
+    }
+
+    .ctr-card:hover {
+      background: rgba(255, 255, 255, .06);
+      border-color: rgba(56, 189, 248, .2);
+      transform: translateX(3px);
+    }
+
+    #trackMap {
+      height: 300px;
+      border-radius: 12px;
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, .1);
+      border-radius: 3px;
+    }
+
+    /* PAGINATION */
+    .pagination {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      margin-top: 16px;
+    }
+
+    .pagination .btn {
+      min-width: 30px;
+      padding: 5px;
+      text-align: center;
+    }
+
+    .input-autofill {
+      background: rgba(56, 189, 248, .06) !important;
+      border-color: rgba(56, 189, 248, .3) !important;
+      color: var(--cyan) !important;
+      font-family: var(--mono) !important;
+      cursor: default;
+    }
+
+    .auto-hint {
+      font-size: 10px;
+      color: var(--cyan);
+      margin-top: 4px;
+      font-family: var(--mono);
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
+
 <body>
-<div class="sidebar">
-  <div class="sidebar-logo">
-    <div class="icon">📦</div>
-    <div><div class="brand">CMS</div><div class="sub-role">Pengguna Jasa</div></div>
-  </div>
-  <nav class="sidebar-nav">
-    <div class="nav-section">Monitoring</div>
-    <button class="nav-item active" onclick="showSection('dashboard')"><span class="ni">📊</span> Dashboard</button>
-    <button class="nav-item" onclick="showSection('tracking')"><span class="ni">🗺️</span> Live Tracking</button>
-    <button class="nav-item" onclick="showSection('containers')"><span class="ni">📦</span> Kontainer Saya</button>
-    <button class="nav-item" onclick="showSection('documents')"><span class="ni">📄</span> Dokumen <span class="nb" id="nbDoc">0</span></button>
-    <button class="nav-item" onclick="showSection('notifications')"><span class="ni">🔔</span> Notifikasi <span class="nb" id="nbNotif">0</span></button>
-  </nav>
-  <div class="sidebar-footer">
-    <div class="user-card">
-      <div class="user-avatar" id="userInitial">S</div>
-      <div><div class="user-name" id="userName">Stakeholder</div><div class="user-role">Pengguna Jasa</div></div>
-      <button class="logout-btn" onclick="doLogout()">⏻</button>
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <div class="icon">📦</div>
+      <div>
+        <div class="brand">CMS</div>
+        <div class="sub-role">Pengguna Jasa</div>
+      </div>
     </div>
-  </div>
-</div>
-
-<div class="main">
-  <div class="topbar">
-    <div><h2 id="pageTitle">Dashboard</h2><div class="breadcrumb" id="pageBreadcrumb">CMS › Dashboard</div></div>
-    <div style="font-size:11px;color:var(--gray);font-family:var(--mono)" id="dateDisplay"></div>
-  </div>
-  <div class="content">
-
-    <div class="section active" id="sec-dashboard">
-      <div class="stat-grid" id="statGrid">
-        <div class="stat-card">
-          <div class="stat-label">Total Kontainer</div>
-          <div class="stat-value" id="kpiTotal">0</div>
-          <div class="stat-icon">📦</div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">Monitoring</div>
+      <button class="nav-item active" onclick="showSection('dashboard')"><span class="ni">📊</span> Dashboard</button>
+      <button class="nav-item" onclick="showSection('tracking')"><span class="ni">🗺️</span> Live Tracking</button>
+      <button class="nav-item" onclick="showSection('containers')"><span class="ni">📦</span> Kontainer Saya</button>
+      <button class="nav-item" onclick="showSection('documents')"><span class="ni">📄</span> Dokumen <span class="nb"
+          id="nbDoc">0</span></button>
+      <button class="nav-item" onclick="showSection('notifications')"><span class="ni">🔔</span> Notifikasi <span
+          class="nb" id="nbNotif">0</span></button>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="user-avatar" id="userInitial">S</div>
+        <div>
+          <div class="user-name" id="userName">Stakeholder</div>
+          <div class="user-role">Pengguna Jasa</div>
         </div>
-        <div class="stat-card">
-          <div class="stat-label">Dalam Perjalanan</div>
-          <div class="stat-value" id="kpiActive" style="color:var(--cyan)">0</div>
-          <div class="stat-icon">🚢</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Selesai</div>
-          <div class="stat-value" id="kpiDone" style="color:var(--green)">0</div>
-          <div class="stat-icon">✅</div>
-        </div>
-      </div>
-      
-      <div class="grid-2">
-        <div class="box"><div class="box-title">Status Kontainer</div><canvas id="statusChart" style="max-height:220px"></canvas></div>
-        <div class="box"><div class="box-title">Ekspor vs Impor</div><canvas id="typeChart" style="max-height:220px"></canvas></div>
-      </div>
-
-      <div class="grid-3">
-        <div class="box"><div class="box-title">Kontainer Aktif <span>Klik untuk detail</span></div><div id="ctrCards" style="max-height:300px;overflow-y:auto;padding-right:5px"></div></div>
-        <div class="box"><div class="box-title">Notifikasi Terbaru</div><div id="dashNotif" style="max-height:300px;overflow-y:auto;padding-right:5px"></div></div>
+        <button class="logout-btn" onclick="doLogout()">⏻</button>
       </div>
     </div>
-
-    <div class="section" id="sec-tracking">
-      <div class="grid-3">
-        <div class="box"><div class="box-title">Peta Live Tracking</div><div id="trackMap"></div></div>
-        <div class="box"><div class="box-title">Progress Pengiriman</div><div id="trackList"></div></div>
-      </div>
-    </div>
-
-    <div class="section" id="sec-containers">
-      <div class="filter-bar">
-        <input class="search-input" id="ctrSearch" placeholder="🔍 Cari kontainer..." oninput="renderContainers()">
-        <button class="btn btn-primary" onclick="openAddContainer()">+ Tambah Kontainer</button>
-      </div>
-      <div class="box">
-        <table class="data-table">
-          <thead><tr><th>ID</th><th>Booking</th><th>Vessel</th><th>Komoditi</th><th>Ekspor/Impor</th><th>ETA</th><th>Status</th><th>Detail</th></tr></thead>
-          <tbody id="containerTable"></tbody>
-        </table>
-        <div class="pagination" id="pg-container"></div>
-      </div>
-    </div>
-
-    <div class="section" id="sec-documents">
-      <div class="filter-bar">
-        <input class="search-input" id="docSearch" placeholder="🔍 Cari dokumen..." oninput="renderDocuments(1)">
-        <button class="btn btn-primary" onclick="openUploadDoc()">+ Upload Dokumen</button>
-      
-        <label>Tanggal:</label>
-        <input type="date" id="docDate" onchange="renderDocuments(1)" style="background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:8px;padding:7px 10px;color:var(--white);font-family:var(--font);font-size:12px;outline:none;">
-        <button class="btn btn-success" onclick="downloadDocExcel()">📥 Laporan Excel</button>
-      </div>
-      <div class="box">
-        <table class="data-table">
-          <thead><tr><th>ID</th><th>Kontainer</th><th>Tipe</th><th>Ekspor/Impor</th><th>Status</th><th>Tanggal</th><th>Catatan Operator</th><th>Aksi</th></tr></thead>
-          <tbody id="documentTable"></tbody>
-        </table>
-        <div class="pagination" id="pg-document"></div>
-      </div>
-    </div>
-
-    <div class="section" id="sec-notifications">
-      <div class="box">
-        <div class="box-title">Notifikasi Saya <span id="unreadCount"></span>
-          <button class="btn btn-ghost btn-sm" onclick="markAllRead()">✓ Semua Dibaca</button>
-        </div>
-        <div id="notifList"></div>
-        <div class="pagination" id="pg-notif"></div>
-      </div>
-    </div>
-
   </div>
-</div>
+
+  <div class="main">
+    <div class="topbar">
+      <div>
+        <h2 id="pageTitle">Dashboard</h2>
+        <div class="breadcrumb" id="pageBreadcrumb">CMS › Dashboard</div>
+      </div>
+      <div style="font-size:11px;color:var(--gray);font-family:var(--mono)" id="dateDisplay"></div>
+    </div>
+    <div class="content">
+
+      <div class="section active" id="sec-dashboard">
+        <div class="stat-grid" id="statGrid">
+          <div class="stat-card">
+            <div class="stat-label">Total Kontainer</div>
+            <div class="stat-value" id="kpiTotal">0</div>
+            <div class="stat-icon">📦</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Dalam Perjalanan</div>
+            <div class="stat-value" id="kpiActive" style="color:var(--cyan)">0</div>
+            <div class="stat-icon">🚢</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Selesai</div>
+            <div class="stat-value" id="kpiDone" style="color:var(--green)">0</div>
+            <div class="stat-icon">✅</div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="box">
+            <div class="box-title">Status Kontainer</div><canvas id="statusChart" style="max-height:220px"></canvas>
+          </div>
+          <div class="box">
+            <div class="box-title">Ekspor vs Impor</div><canvas id="typeChart" style="max-height:220px"></canvas>
+          </div>
+        </div>
+
+        <div class="grid-3">
+          <div class="box">
+            <div class="box-title">Kontainer Aktif <span>Klik untuk detail</span></div>
+            <div id="ctrCards" style="max-height:300px;overflow-y:auto;padding-right:5px"></div>
+          </div>
+          <div class="box">
+            <div class="box-title">Notifikasi Terbaru</div>
+            <div id="dashNotif" style="max-height:300px;overflow-y:auto;padding-right:5px"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section" id="sec-tracking">
+        <div class="grid-3">
+          <div class="box">
+            <div class="box-title">Peta Live Tracking</div>
+            <div id="trackMap"></div>
+          </div>
+          <div class="box">
+            <div class="box-title">Progress Pengiriman</div>
+            <div id="trackList"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section" id="sec-containers">
+        <div class="filter-bar">
+          <input class="search-input" id="ctrSearch" placeholder="🔍 Cari kontainer..." oninput="renderContainers()">
+          <button class="btn btn-primary" onclick="openAddContainer()">+ Tambah Kontainer</button>
+        </div>
+        <div class="box">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Booking</th>
+                <th>Vessel</th>
+                <th>Komoditi</th>
+                <th>Ekspor/Impor</th>
+                <th>ETA</th>
+                <th>Status</th>
+                <th>Detail</th>
+              </tr>
+            </thead>
+            <tbody id="containerTable"></tbody>
+          </table>
+          <div class="pagination" id="pg-container"></div>
+        </div>
+      </div>
+
+      <div class="section" id="sec-documents">
+        <div class="filter-bar">
+          <input class="search-input" id="docSearch" placeholder="🔍 Cari dokumen..." oninput="renderDocuments(1)">
+          <button class="btn btn-primary" onclick="openUploadDoc()">+ Upload Dokumen</button>
+
+          <label>Tanggal:</label>
+          <input type="date" id="docDate" onchange="renderDocuments(1)"
+            style="background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:8px;padding:7px 10px;color:var(--white);font-family:var(--font);font-size:12px;outline:none;">
+          <button class="btn btn-success" onclick="downloadDocExcel()">📥 Laporan Excel</button>
+        </div>
+        <div class="box">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Kontainer</th>
+                <th>Tipe</th>
+                <th>Ekspor/Impor</th>
+                <th>Status</th>
+                <th>Tanggal</th>
+                <th>Catatan Operator</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="documentTable"></tbody>
+          </table>
+          <div class="pagination" id="pg-document"></div>
+        </div>
+      </div>
+
+      <div class="section" id="sec-notifications">
+        <div class="box">
+          <div class="box-title">Notifikasi Saya <span id="unreadCount"></span>
+            <button class="btn btn-ghost btn-sm" onclick="markAllRead()">✓ Semua Dibaca</button>
+          </div>
+          <div id="notifList"></div>
+          <div class="pagination" id="pg-notif"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
 
 
-<!-- MODAL: Tambah Kontainer -->
-<div class="modal-overlay" id="modalContainer">
-  <div class="modal">
-    <h3 id="modalContainerTitle">Tambah Kontainer</h3>
-    <p class="sub" style="margin-bottom: 12px;">Mendaftarkan kontainer Anda ke dalam sistem pengawasan pelabuhan.</p>
-    
-    <div class="form-row">
+  <!-- MODAL: Tambah Kontainer -->
+  <div class="modal-overlay" id="modalContainer">
+    <div class="modal">
+      <h3 id="modalContainerTitle">Tambah Kontainer</h3>
+      <p class="sub" style="margin-bottom: 12px;">Mendaftarkan kontainer Anda ke dalam sistem pengawasan pelabuhan.</p>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>ID Kontainer</label>
+          <input id="f_id" placeholder="Masukkan ID Kontainer...">
+        </div>
+        <div class="form-group">
+          <label>Booking No <span style="color:var(--cyan);font-size:9px">● Otomatis</span></label>
+          <input id="f_booking" class="input-autofill" readonly placeholder="Otomatis...">
+          <div class="auto-hint" id="hint_bk"></div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group"><label>Nama Kapal (Vessel)</label>
+          <select id="f_vessel">
+            <option>KM. Nusantara Jaya</option>
+            <option>MV. Samudra Biru</option>
+            <option>KM. Garuda Mas</option>
+            <option>MV. Cemara Indah</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Status Booking</label>
+          <select id="f_booking_status">
+            <option value="Ekspor">Ekspor</option>
+            <option value="Impor">Impor</option>
+          </select>
+        </div>
+      </div>
+      <datalist id="port_list">
+        <option value="Surabaya (Tj. Perak)">
+        <option value="Jakarta (Tj. Priuk)">
+        <option value="Semarang (Tj. Emas)">
+        <option value="Lampung (Pel. Panjang)">
+        <option value="Medan (Belawan)">
+        <option value="Riau (Dumai)">
+        <option value="Banjarmasin (Trisakti)">
+        <option value="Sampit (Bagendang)">
+        <option value="Kalimantan Utara (Tarakan)">
+        <option value="Makassar (Soekarno-Hatta)">
+        <option value="Sulawesi Utara (Bitung)">
+        <option value="Papua Barat (Sorong)">
+        <option value="Tiongkok (Shanghai)">
+        <option value="Singapura (Port Of Singapore)">
+        <option value="Hong kong (Hong Kong)">
+        <option value="Korea Selatan (Busan)">
+        <option value="Belanda (Rotterdam)">
+        <option value="Sydney (Port Botany)">
+        <option value="Malaysia (Port Klang)">
+        <option value="Thailand (Laem Chabang)">
+        <option value="Jepang (Tokyo)">
+      </datalist>
+
+      <div class="form-row">
+        <div class="form-group"><label>Pelabuhan Asal</label>
+          <input id="f_origin" list="port_list" placeholder="Ketik/Pilih Pelabuhan..." autocomplete="off">
+        </div>
+        <div class="form-group"><label>Pelabuhan Tujuan</label>
+          <input id="f_dest" list="port_list" placeholder="Ketik/Pilih Pelabuhan..." autocomplete="off">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Tipe Kontainer</label>
+          <select id="f_type">
+            <option>20ft Dry</option>
+            <option>40ft Dry</option>
+            <option>20ft Reefer</option>
+            <option>40ft Reefer</option>
+            <option>40ft HC</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Berat (kg)</label><input id="f_weight" type="number" placeholder="18500"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Komoditi (Barang)</label><input id="f_commodity"
+            placeholder="Elektronik, Tekstil..."></div>
+        <div class="form-group"><label>Perkiraan Kedatangan (ETA)</label><input id="f_eta" type="date"></div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal('modalContainer')">Batal</button>
+        <button class="btn btn-primary" onclick="saveContainer()">🚀 Daftarkan Kontainer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Edit Dokumen -->
+  <div class="modal-overlay" id="modalEditDoc">
+    <div class="modal" style="width:480px">
+      <h3>Edit Dokumen</h3>
+      <p class="sub">Perbarui informasi atau ganti file dokumen</p>
       <div class="form-group">
-        <label>ID Kontainer</label>
-        <input id="f_id" placeholder="Masukkan ID Kontainer...">
+        <label>Kontainer</label>
+        <select id="editDocContainer" disabled style="opacity:0.7;"></select>
       </div>
       <div class="form-group">
-        <label>Booking No <span style="color:var(--cyan);font-size:9px">● Otomatis</span></label>
-        <input id="f_booking" class="input-autofill" readonly placeholder="Otomatis...">
-        <div class="auto-hint" id="hint_bk"></div>
-      </div>
-    </div>
-    
-    <div class="form-row">
-      <div class="form-group"><label>Nama Kapal (Vessel)</label>
-        <select id="f_vessel">
-           <option>KM. Nusantara Jaya</option>
-           <option>MV. Samudra Biru</option>
-           <option>KM. Garuda Mas</option>
-           <option>MV. Cemara Indah</option>
+        <label>Tipe Dokumen</label>
+        <select id="editDocType">
+          <option>Invoice</option>
+          <option>Packing List</option>
+          <option>Customs Declaration</option>
+          <option>Certificate of Origin</option>
+          <option>Bukti Pembayaran</option>
+          <option>Surat Izin</option>
+          <option>Bill of Lading</option>
+          <option>Surat Jalan</option>
         </select>
       </div>
       <div class="form-group">
-        <label>Status Booking</label>
-        <select id="f_booking_status">
-          <option value="Ekspor">Ekspor</option>
-          <option value="Impor">Impor</option>
+        <label>Upload File Baru (Opsional)</label>
+        <input type="file" id="editDocFile" accept=".pdf,.jpg,.jpeg,.png" style="padding:8px">
+      </div>
+      <div class="form-group">
+        <label>Catatan Tambahan</label>
+        <textarea id="editDocNotes" placeholder="Keterangan tambahan..."></textarea>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal('modalEditDoc')">Batal</button>
+        <button class="btn btn-primary" onclick="submitEditDoc()">Simpan Perubahan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Detail -->
+  <div class="modal-overlay" id="modalDetail">
+    <div class="modal" style="width:700px">
+      <h3 id="detailTitle">Detail</h3>
+      <p class="sub" id="detailSub"></p>
+      <div id="detailContent"></div>
+      <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('modalDetail')">Tutup</button></div>
+    </div>
+  </div>
+
+  <!-- MODAL: Upload Doc -->
+  <div class="modal-overlay" id="modalUpload">
+    <div class="modal" style="width:480px">
+      <h3>Upload Dokumen</h3>
+      <p class="sub">Submit dokumen ke operator untuk diverifikasi</p>
+      <div class="form-group"><label>Kontainer</label><select id="docContainer"></select></div>
+      <div class="form-group"><label>Tipe Dokumen</label>
+        <select id="docType">
+          <option>Invoice</option>
+          <option>Packing List</option>
+          <option>Customs Declaration</option>
+          <option>Certificate of Origin</option>
+          <option>Bukti Pembayaran</option>
+          <option>Surat Izin</option>
         </select>
       </div>
-    </div>
-    <datalist id="port_list">
-       <option value="Surabaya (Tj. Perak)">
-       <option value="Jakarta (Tj. Priuk)">
-       <option value="Semarang (Tj. Emas)">
-       <option value="Lampung (Pel. Panjang)">
-       <option value="Medan (Belawan)">
-       <option value="Riau (Dumai)">
-       <option value="Banjarmasin (Trisakti)">
-       <option value="Sampit (Bagendang)">
-       <option value="Kalimantan Utara (Tarakan)">
-       <option value="Makassar (Soekarno-Hatta)">
-       <option value="Sulawesi Utara (Bitung)">
-       <option value="Papua Barat (Sorong)">
-       <option value="Tiongkok (Shanghai)">
-       <option value="Singapura (Port Of Singapore)">
-       <option value="Hong kong (Hong Kong)">
-       <option value="Korea Selatan (Busan)">
-       <option value="Belanda (Rotterdam)">
-       <option value="Sydney (Port Botany)">
-       <option value="Malaysia (Port Klang)">
-       <option value="Thailand (Laem Chabang)">
-       <option value="Jepang (Tokyo)">
-    </datalist>
-
-    <div class="form-row">
-      <div class="form-group"><label>Pelabuhan Asal</label>
-         <input id="f_origin" list="port_list" placeholder="Ketik/Pilih Pelabuhan..." autocomplete="off">
-      </div>
-      <div class="form-group"><label>Pelabuhan Tujuan</label>
-         <input id="f_dest" list="port_list" placeholder="Ketik/Pilih Pelabuhan..." autocomplete="off">
+      <div class="form-group"><label>Upload File (PDF/JPG/PNG)</label><input type="file" id="docFile"
+          accept=".pdf,.jpg,.jpeg,.png" style="padding:8px"></div>
+      <div class="form-group"><label>Catatan untuk Operator</label><textarea id="docNotes"
+          placeholder="Keterangan tambahan..."></textarea></div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal('modalUpload')">Batal</button>
+        <button class="btn btn-primary" onclick="saveDoc()">Submit ke Operator</button>
       </div>
     </div>
-    <div class="form-row">
-      <div class="form-group"><label>Tipe Kontainer</label>
-        <select id="f_type">
-          <option>20ft Dry</option><option>40ft Dry</option>
-          <option>20ft Reefer</option><option>40ft Reefer</option><option>40ft HC</option>
-        </select>
+  </div>
+
+
+  <!-- MODAL: Preview Dokumen -->
+  <div class="modal-overlay" id="modalDocPreview">
+    <div class="modal" style="width:800px; max-width:95vw;">
+      <h3>Preview Dokumen</h3>
+      <p class="sub" id="previewSub"></p>
+      <div id="previewContainer"
+        style="width:100%; height:500px; max-height:70vh; background:rgba(0,0,0,0.5); border-radius:8px; overflow:hidden; display:flex; align-items:center; justify-content:center; margin-bottom:14px;">
       </div>
-      <div class="form-group"><label>Berat (kg)</label><input id="f_weight" type="number" placeholder="18500"></div>
-    </div>
-    <div class="form-row">
-      <div class="form-group"><label>Komoditi (Barang)</label><input id="f_commodity" placeholder="Elektronik, Tekstil..."></div>
-      <div class="form-group"><label>Perkiraan Kedatangan (ETA)</label><input id="f_eta" type="date"></div>
-    </div>
-
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('modalContainer')">Batal</button>
-      <button class="btn btn-primary" onclick="saveContainer()">🚀 Daftarkan Kontainer</button>
+      <div class="modal-footer">
+        <a id="previewDownloadBtn" href="" target="_blank" class="btn btn-success">⬇️ Download File</a>
+        <button class="btn btn-ghost" onclick="closeModal('modalDocPreview')">Tutup</button>
+      </div>
     </div>
   </div>
-</div>
 
-<!-- MODAL: Edit Dokumen -->
-<div class="modal-overlay" id="modalEditDoc">
-  <div class="modal" style="width:480px">
-    <h3>Edit Dokumen</h3>
-    <p class="sub">Perbarui informasi atau ganti file dokumen</p>
-    <div class="form-group">
-      <label>Kontainer</label>
-      <select id="editDocContainer" disabled style="opacity:0.7;"></select>
-    </div>
-    <div class="form-group">
-      <label>Tipe Dokumen</label>
-      <select id="editDocType">
-        <option>Invoice</option>
-        <option>Packing List</option>
-        <option>Customs Declaration</option>
-        <option>Certificate of Origin</option>
-        <option>Bukti Pembayaran</option>
-        <option>Surat Izin</option>
-        <option>Bill of Lading</option>
-        <option>Surat Jalan</option>
-      </select>
-    </div>
-    <div class="form-group">
-      <label>Upload File Baru (Opsional)</label>
-      <input type="file" id="editDocFile" accept=".pdf,.jpg,.jpeg,.png" style="padding:8px">
-    </div>
-    <div class="form-group">
-      <label>Catatan Tambahan</label>
-      <textarea id="editDocNotes" placeholder="Keterangan tambahan..."></textarea>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('modalEditDoc')">Batal</button>
-      <button class="btn btn-primary" onclick="submitEditDoc()">Simpan Perubahan</button>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL: Detail -->
-<div class="modal-overlay" id="modalDetail">
-  <div class="modal" style="width:700px">
-    <h3 id="detailTitle">Detail</h3><p class="sub" id="detailSub"></p>
-    <div id="detailContent"></div>
-    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('modalDetail')">Tutup</button></div>
-  </div>
-</div>
-
-<!-- MODAL: Upload Doc -->
-<div class="modal-overlay" id="modalUpload">
-  <div class="modal" style="width:480px">
-    <h3>Upload Dokumen</h3><p class="sub">Submit dokumen ke operator untuk diverifikasi</p>
-    <div class="form-group"><label>Kontainer</label><select id="docContainer"></select></div>
-    <div class="form-group"><label>Tipe Dokumen</label>
-      <select id="docType"><option>Invoice</option><option>Packing List</option><option>Customs Declaration</option><option>Certificate of Origin</option><option>Bukti Pembayaran</option><option>Surat Izin</option></select>
-    </div>
-    <div class="form-group"><label>Upload File (PDF/JPG/PNG)</label><input type="file" id="docFile" accept=".pdf,.jpg,.jpeg,.png" style="padding:8px"></div>
-    <div class="form-group"><label>Catatan untuk Operator</label><textarea id="docNotes" placeholder="Keterangan tambahan..."></textarea></div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('modalUpload')">Batal</button>
-      <button class="btn btn-primary" onclick="saveDoc()">Submit ke Operator</button>
-    </div>
-  </div>
-</div>
-
-
-<!-- MODAL: Preview Dokumen -->
-<div class="modal-overlay" id="modalDocPreview">
-  <div class="modal" style="width:800px; max-width:95vw;">
-    <h3>Preview Dokumen</h3>
-    <p class="sub" id="previewSub"></p>
-    <div id="previewContainer" style="width:100%; height:500px; max-height:70vh; background:rgba(0,0,0,0.5); border-radius:8px; overflow:hidden; display:flex; align-items:center; justify-content:center; margin-bottom:14px;">
-    </div>
-    <div class="modal-footer">
-       <a id="previewDownloadBtn" href="" target="_blank" class="btn btn-success">⬇️ Download File</a>
-       <button class="btn btn-ghost" onclick="closeModal('modalDocPreview')">Tutup</button>
-    </div>
-  </div>
-</div>
-
-<script src="../assets/js/api-client.js"></script>
-<script src="../assets/js/stakeholder.js"></script>
+  <script src="../assets/js/api-client.js"></script>
+  <script src="../assets/js/stakeholder.js"></script>
 </body>
+
 </html>
