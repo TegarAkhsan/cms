@@ -252,35 +252,42 @@ async function openAddContainer() {
   document.getElementById('modalContainer').classList.add('open');
 }
 
+let isSavingContainer = false;
 async function saveContainer() {
-  const id = document.getElementById('f_id').value.trim();
-  if (!id) { alert('ID Kontainer harus diisi manual'); return; }
-  const data = {
-    id,
-    booking_no:   document.getElementById('f_booking').value,
-    booking_status: document.getElementById('f_booking_status').value,
-    vessel:       document.getElementById('f_vessel').value,
-    origin:       document.getElementById('f_origin').value,
-    destination:  document.getElementById('f_dest').value,
-    type:         document.getElementById('f_type').value,
-    weight:       parseInt(document.getElementById('f_weight').value)||0,
-    commodity:    document.getElementById('f_commodity').value,
-    eta:          document.getElementById('f_eta').value
-  };
-  if (editCtrId) {
-    data.id = editCtrId;
-    const res = await API.updateContainer(editCtrId, data);
-    if(res.error){alert(res.error);return;}
-    closeModal('modalContainer');
-    await renderContainers();
-    showSuccessModal('Kontainer berhasil diupdate!');
-  } else {
-    data.status = 'booking';
-    const res = await API.createContainer(data);
-    if(res.error){alert(res.error);return;}
-    closeModal('modalContainer');
-    await renderContainers();
-    showSuccessModal('Kontainer berhasil didaftarkan!');
+  if (isSavingContainer) return;
+  isSavingContainer = true;
+  try {
+    const id = document.getElementById('f_id').value.trim();
+    if (!id) { alert('ID Kontainer harus diisi manual'); return; }
+    const data = {
+      id,
+      booking_no:   document.getElementById('f_booking').value,
+      booking_status: document.getElementById('f_booking_status').value,
+      vessel:       document.getElementById('f_vessel').value,
+      origin:       document.getElementById('f_origin').value,
+      destination:  document.getElementById('f_dest').value,
+      type:         document.getElementById('f_type').value,
+      weight:       parseInt(document.getElementById('f_weight').value)||0,
+      commodity:    document.getElementById('f_commodity').value,
+      eta:          document.getElementById('f_eta').value
+    };
+    if (editCtrId) {
+      data.id = editCtrId;
+      const res = await API.updateContainer(editCtrId, data);
+      if(res.error){alert(res.error);return;}
+      closeModal('modalContainer');
+      await renderContainers();
+      showSuccessModal('Kontainer berhasil diupdate!');
+    } else {
+      data.status = 'booking';
+      const res = await API.createContainer(data);
+      if(res.error){alert(res.error);return;}
+      closeModal('modalContainer');
+      await renderContainers();
+      showSuccessModal('Kontainer berhasil didaftarkan!');
+    }
+  } finally {
+    isSavingContainer = false;
   }
 }
 
@@ -303,8 +310,11 @@ async function openEditContainer(id) {
 }
 
 function showSuccessModal(msg) {
-  document.getElementById('successMsg').textContent = msg;
-  document.getElementById('modalSuccess').classList.add('open');
+  if (typeof showToast === 'function') {
+    showToast(msg, 'success');
+  } else {
+    alert(msg);
+  }
 }
 
 async function openUploadDoc() {
@@ -314,20 +324,27 @@ async function openUploadDoc() {
   document.getElementById('modalUpload').classList.add('open');
 }
 
+let isSavingDoc = false;
 async function saveDoc() {
-  const formData = new FormData();
-  formData.append('container_id', document.getElementById('docContainer').value);
-  formData.append('type', document.getElementById('docType').value);
-  formData.append('notes', document.getElementById('docNotes').value);
-  const fileInput = document.getElementById('docFile');
-  if(fileInput.files[0]) formData.append('file', fileInput.files[0]);
+  if (isSavingDoc) return;
+  isSavingDoc = true;
+  try {
+    const formData = new FormData();
+    formData.append('container_id', document.getElementById('docContainer').value);
+    formData.append('type', document.getElementById('docType').value);
+    formData.append('notes', document.getElementById('docNotes').value);
+    const fileInput = document.getElementById('docFile');
+    if(fileInput.files[0]) formData.append('file', fileInput.files[0]);
 
-  const res = await fetch(API.base + '/documents.php', {method:'POST',credentials:'include',body:formData});
-  const data = await res.json();
-  if(data.error){alert(data.error);return;}
-  closeModal('modalUpload');
-  await renderDocuments();
-  showSuccessModal('Dokumen berhasil diupload!');
+    const res = await fetch(API.base + '/documents.php', {method:'POST',credentials:'include',body:formData});
+    const data = await res.json();
+    if(data.error){alert(data.error);return;}
+    closeModal('modalUpload');
+    await renderDocuments();
+    showSuccessModal('Dokumen berhasil diupload!');
+  } finally {
+    isSavingDoc = false;
+  }
 }
 
 async function viewDetail(id) {
