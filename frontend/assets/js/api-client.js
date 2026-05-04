@@ -86,13 +86,18 @@ const DOC_STATUS = {
 };
 
 // ── UTILITIES ─────────────────────────────────────────────
+function parseSafeDate(d) {
+    if (!d) return new Date();
+    return new Date(typeof d === 'string' ? d.replace(' ', 'T') : d);
+}
+
 function formatDate(d) {
     if (!d) return '-';
-    return new Date(d).toLocaleDateString('id-ID', { day:'2-digit', month:'short', year:'numeric' });
+    return parseSafeDate(d).toLocaleDateString('id-ID', { day:'2-digit', month:'short', year:'numeric' });
 }
 function formatDateTime(d) {
     if (!d) return '-';
-    return new Date(d).toLocaleString('id-ID', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+    return parseSafeDate(d).toLocaleString('id-ID', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
 }
 function statusBadge(status) {
     const s = STATUS_CONFIG[status] || { label:status, color:'#64748b', bg:'rgba(100,116,139,.15)', icon:'📦' };

@@ -197,7 +197,7 @@ async function renderDocuments(page = 1) {
   const filtered = data.filter(d => {
     if (!d.created_at) return true;
     if (filterDate) {
-      const dDate = new Date(d.created_at);
+      const dDate = parseSafeDate(d.created_at);
       const localDate = dDate.getFullYear() + '-' + String(dDate.getMonth() + 1).padStart(2, '0') + '-' + String(dDate.getDate()).padStart(2, '0');
       if (localDate !== filterDate) return false;
     }
