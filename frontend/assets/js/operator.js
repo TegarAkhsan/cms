@@ -23,7 +23,7 @@ function buildPagination(total, page, callbackName) {
   html += `<button class="btn btn-sm btn-ghost" onclick="${callbackName}(${page + 1})" ${page===pages?'disabled':''}>&raquo;</button>`;
   return html;
 }
-const PAGE_TITLES={dashboard:['Dashboard Operator','CMS › Dashboard'],containers:['Manajemen Kontainer','CMS › Kontainer'],documents:['Dokumen','CMS › Dokumen'],yard:['Yard Map','CMS › Yard'],tracking:['Live Tracking','CMS › Tracking']};
+const PAGE_TITLES={dashboard:['Dashboard Operator','CIMS › Dashboard'],containers:['Manajemen Kontainer','CIMS › Kontainer'],documents:['Dokumen','CIMS › Dokumen'],yard:['Yard Map','CIMS › Yard'],tracking:['Live Tracking','CIMS › Tracking']};
 
 async function showSection(name) {
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
@@ -463,7 +463,7 @@ async function downloadDocExcel() {
 
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Laporan Dokumen');
-  XLSX.writeFile(wb, `Laporan_Dokumen_CMS_${filterLabel}.xlsx`);
+  XLSX.writeFile(wb, `Laporan_Dokumen_CIMS_${filterLabel}.xlsx`);
 }
 
 

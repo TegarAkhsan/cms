@@ -237,11 +237,11 @@ async function openAddContainer() {
   const now = new Date();
   const ymd = now.getFullYear() + String(now.getMonth()+1).padStart(2,'0') + String(now.getDate()).padStart(2,'0');
   const todayBkNums = ctrs.map(c => {
-     if(c.booking_no && c.booking_no.startsWith(`CMS-${ymd}-`)) return parseInt(c.booking_no.split('-')[2]);
+     if(c.booking_no && c.booking_no.startsWith(`CIMS-${ymd}-`)) return parseInt(c.booking_no.split('-')[2]);
      return 0;
   }).filter(n=>!isNaN(n));
   const bkNext = todayBkNums.length > 0 ? Math.max(...todayBkNums) + 1 : 1;
-  document.getElementById('f_booking').value = `CMS-${ymd}-${String(bkNext).padStart(5,'0')}`;
+  document.getElementById('f_booking').value = `CIMS-${ymd}-${String(bkNext).padStart(5,'0')}`;
   document.getElementById('hint_bk').textContent = `Nomor Booking hari ini`;
   
   document.getElementById('f_weight').value = '';
@@ -396,7 +396,7 @@ async function downloadDocExcel() {
 
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Laporan Dokumen');
-  XLSX.writeFile(wb, `Laporan_Dokumen_CMS_${filterLabel}.xlsx`);
+  XLSX.writeFile(wb, `Laporan_Dokumen_CIMS_${filterLabel}.xlsx`);
 }
 
 async function deleteContainer(id) {

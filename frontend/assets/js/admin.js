@@ -46,13 +46,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // ── NAVIGASI
 const PAGE_TITLES = {
-  dashboard:     ['Dashboard Admin',        'CMS › Dashboard'],
-  containers:    ['Manajemen Kontainer',    'CMS › Kontainer'],
-  documents:     ['Manajemen Dokumen',      'CMS › Dokumen'],
-  tracking:      ['Live Tracking',          'CMS › Live Tracking'],
-  users:         ['Manajemen Pengguna',     'CMS › Pengguna'],
-  notifications: ['Notifikasi Sistem',      'CMS › Notifikasi'],
-  reports:       ['Laporan & Statistik',    'CMS › Laporan'],
+  dashboard:     ['Dashboard Admin',        'CIMS › Dashboard'],
+  containers:    ['Manajemen Kontainer',    'CIMS › Kontainer'],
+  documents:     ['Manajemen Dokumen',      'CIMS › Dokumen'],
+  tracking:      ['Live Tracking',          'CIMS › Live Tracking'],
+  users:         ['Manajemen Pengguna',     'CIMS › Pengguna'],
+  notifications: ['Notifikasi Sistem',      'CIMS › Notifikasi'],
+  reports:       ['Laporan & Statistik',    'CIMS › Laporan'],
 };
 
 async function showSection(name) {
@@ -62,7 +62,7 @@ async function showSection(name) {
   const navItem = document.querySelector(`.nav-item[onclick*="${name}"]`);
   if(navItem) navItem.classList.add('active');
   
-  const [t, b] = PAGE_TITLES[name] || ['Dashboard', 'CMS Tools'];
+  const [t, b] = PAGE_TITLES[name] || ['Dashboard', 'CIMS Tools'];
   document.getElementById('pageTitle').textContent      = t;
   document.getElementById('pageBreadcrumb').textContent = b;
 
@@ -552,8 +552,8 @@ async function downloadExcel() {
 
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Laporan Kontainer');
-  XLSX.writeFile(wb, `Laporan_CMS_${filterLabel}.xlsx`);
-  showToast(`📥 File Laporan_CMS_${filterLabel}.xlsx berhasil diunduh!`);
+  XLSX.writeFile(wb, `Laporan_CIMS_${filterLabel}.xlsx`);
+  showToast(`📥 File Laporan_CIMS_${filterLabel}.xlsx berhasil diunduh!`);
 }
 
 // ── BADGES
@@ -602,7 +602,7 @@ async function downloadDocExcel() {
 
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Laporan Dokumen');
-  XLSX.writeFile(wb, `Laporan_Dokumen_CMS_${filterLabel}.xlsx`);
+  XLSX.writeFile(wb, `Laporan_Dokumen_CIMS_${filterLabel}.xlsx`);
 }
 
 
