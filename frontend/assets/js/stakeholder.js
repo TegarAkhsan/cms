@@ -129,14 +129,51 @@ async function renderDashboard() {
 async function renderTracking() {
   const ctrs = await API.getContainers();
   const active = ctrs.filter(c => c.status !== 'completed');
+  
   if (!mapInstance) {
-    mapInstance = L.map('trackMap').setView([-7.2575, 112.7521], 8);
+    mapInstance = L.map('trackMap').setView([-7.2000, 112.7350], 14);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(mapInstance);
-  } else { mapInstance.eachLayer(l => { if (l instanceof L.Marker) l.remove(); }); }
+  } else { 
+    mapInstance.eachLayer(l => { if (l instanceof L.Marker) l.remove(); }); 
+  }
+
+  // Simulation Zones
+  const ZONES = {
+    booking:        [-7.2150, 112.7300],
+    gate_in:        [-7.2100, 112.7350],
+    ship_arrival:   [-7.1850, 112.7450],
+    discharge:      [-7.1950, 112.7380],
+    yard_map:       [-7.2020, 112.7350],
+    clearance:      [-7.2020, 112.7350],
+    loading:        [-7.2020, 112.7350],
+    ship_departure: [-7.1800, 112.7500],
+    delivery:       [-7.2200, 112.7200],
+  };
+
   active.forEach(c => {
     const s = STATUS_CONFIG[c.status] || {};
-    const icon = L.divIcon({ html: `<div style="background:${s.color || '#2563eb'};color:white;padding:4px 10px;border-radius:20px;font-size:10px;font-weight:700;box-shadow:0 3px 10px rgba(0,0,0,.4)">${s.icon} ${c.id}</div>`, className: '', iconAnchor: [0, 0] });
-    L.marker([parseFloat(c.position_lat) || (-7.2575), parseFloat(c.position_lng) || 112.7521], { icon }).addTo(mapInstance).bindPopup(`<b>${c.id}</b><br>${c.vessel}<br>${c.position_desc}`);
+    const basePos = ZONES[c.status] || [-7.2000, 112.7350];
+    const lat = basePos[0] + (Math.random() - 0.5) * 0.0018;
+    const lng = basePos[1] + (Math.random() - 0.5) * 0.0018;
+
+    const icon = L.divIcon({ 
+      html: `
+        <div style="background:${s.color || 'var(--cyan)'}; color:white; padding:4px 12px; border-radius:20px; font-size:10px; font-weight:700; box-shadow:0 4px 12px rgba(0,0,0,.5); border:2px solid rgba(255,255,255,.3); white-space:nowrap; transform:translate(-50%, -50%);">
+          ${s.icon} ${c.id}
+        </div>`, 
+      className: '', 
+      iconAnchor: [0, 0] 
+    });
+
+    L.marker([lat, lng], { icon }).addTo(mapInstance).bindPopup(`
+      <div style="font-family:var(--font); color:#333; min-width:140px">
+        <b style="color:var(--bg2); font-size:13px">${c.id}</b><br>
+        <span style="font-size:11px;color:#666">🚢 ${c.vessel || '-'}</span><br>
+        <div style="margin-top:8px; padding:4px 10px; border-radius:10px; background:${s.bg}; color:${s.color}; font-size:11px; font-weight:700; display:inline-block">
+          ${s.icon} ${s.label}
+        </div>
+      </div>
+    `);
   });
 
   const exportSteps = [

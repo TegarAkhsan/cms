@@ -389,25 +389,70 @@ window.removeFromYard = async function (id, blockId) {
 };
 
 async function renderTracking() {
-  const ctrs = await API.getContainers({ status: 'delivery' });
   const all = await API.getContainers();
-  const active = all.filter(c => !['completed'].includes(c.status));
+  const active = all.filter(c => c.status !== 'completed');
+  
   if (!mapInstance) {
-    mapInstance = L.map('opMap').setView([-7.2575, 112.7521], 8);
+    // Center of Tanjung Perak Port area
+    mapInstance = L.map('opMap').setView([-7.2000, 112.7350], 14);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(mapInstance);
-  } else { mapInstance.eachLayer(l => { if (l instanceof L.Marker) l.remove(); }); }
+  } else { 
+    mapInstance.eachLayer(l => { if (l instanceof L.Marker) l.remove(); }); 
+  }
+
+  // ZONES definition for simulation
+  const ZONES = {
+    booking:        [-7.2150, 112.7300], // Factory
+    gate_in:        [-7.2100, 112.7350], // Gate
+    ship_arrival:   [-7.1850, 112.7450], // Sea Approach
+    discharge:      [-7.1950, 112.7380], // Quay/Berth
+    yard_map:       [-7.2020, 112.7350], // Yard Zone
+    clearance:      [-7.2020, 112.7350], // Yard Zone (Same)
+    loading:        [-7.2020, 112.7350], // Yard Zone (Same)
+    ship_departure: [-7.1800, 112.7500], // Heading Sea
+    delivery:       [-7.2200, 112.7200], // Out via Road
+  };
+
   active.forEach(c => {
     const s = STATUS_CONFIG[c.status] || {};
-    const icon = L.divIcon({ html: `<div style="background:${s.color || '#10b981'};color:white;padding:3px 8px;border-radius:20px;font-size:10px;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.3)">${s.icon} ${c.id}</div>`, className: '', iconAnchor: [0, 0] });
-    L.marker([parseFloat(c.position_lat) || (-7.2575), parseFloat(c.position_lng) || 112.7521], { icon }).addTo(mapInstance).bindPopup(`<b>${c.id}</b><br>${c.position_desc}`);
+    const basePos = ZONES[c.status] || [-7.2000, 112.7350];
+    
+    // Add jitter to prevent overlapping
+    const lat = basePos[0] + (Math.random() - 0.5) * 0.0018;
+    const lng = basePos[1] + (Math.random() - 0.5) * 0.0018;
+
+    const icon = L.divIcon({ 
+      html: `
+        <div style="background:${s.color || 'var(--cyan)'}; color:white; padding:4px 12px; border-radius:20px; font-size:10px; font-weight:700; box-shadow:0 4px 12px rgba(0,0,0,.5); border:2px solid rgba(255,255,255,.3); white-space:nowrap; transform:translate(-50%, -50%);">
+          ${s.icon} ${c.id}
+        </div>`, 
+      className: '', 
+      iconAnchor: [0, 0] 
+    });
+
+    L.marker([lat, lng], { icon }).addTo(mapInstance).bindPopup(`
+      <div style="font-family:var(--font); color:#333; min-width:150px">
+        <b style="color:var(--bg2); font-size:13px">${c.id}</b><br>
+        <span style="font-size:11px;color:#666">🚢 ${c.vessel || '-'}</span><br>
+        <div style="margin-top:8px; padding:4px 10px; border-radius:10px; background:${s.bg}; color:${s.color}; font-size:11px; font-weight:700; display:inline-block">
+          ${s.icon} ${s.label}
+        </div>
+        <div style="font-size:10px; color:#999; margin-top:6px">📍 ${c.position_desc || '-'}</div>
+      </div>
+    `);
   });
-  document.getElementById('deliveryList').innerHTML = ctrs.map(c => `
-    <div style="padding:10px;border:1px solid var(--border);border-radius:10px;margin-bottom:8px">
-      <div style="display:flex;justify-content:space-between"><span class="mono">${c.id}</span>${statusBadge(c.status)}</div>
-      <div style="font-size:11px;color:var(--gray);margin-top:4px">📍 ${c.position_desc}</div>
-      <button class="btn btn-primary btn-sm" style="margin-top:8px" onclick="openUpdateStatus('${c.id}')">✏️ Update</button>
+
+  const deliveryList = active.filter(c => c.status === 'delivery');
+  document.getElementById('deliveryList').innerHTML = deliveryList.map(c => `
+    <div style="padding:10px; border:1px solid var(--border); border-radius:10px; margin-bottom:8px">
+      <div style="display:flex; justify-content:space-between; margin-bottom:4px">
+        <span class="mono" style="color:var(--white)">${c.id}</span>
+        <span class="badge" style="background:rgba(124,58,237,.1); color:#7c3aed">Trucking</span>
+      </div>
+      <div style="font-size:11px; color:var(--gray)">${c.vessel} &bull; ${c.destination}</div>
+      <button class="btn btn-primary btn-sm" style="margin-top:8px;width:100%;justify-content:center" onclick="openUpdateStatus('${c.id}')">✏️ Update</button>
     </div>
-  `).join('') || '<div style="color:var(--gray);font-size:12px;text-align:center;padding:20px">Tidak ada delivery</div>';
+  `).join('') || '<div style="text-align:center; padding:20px; color:var(--gray); font-size:12px">Tidak ada pengiriman aktif</div>';
 }
 
 async function viewDetail(id) {

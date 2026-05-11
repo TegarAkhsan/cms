@@ -328,18 +328,42 @@ window.refreshMapMarkers = async function() {
   const active = containers.filter(c => c.status !== 'completed');
   const activeIds = active.map(c => c.id);
 
+  // Simulation Zones
+  const ZONES = {
+    booking:        [-7.2150, 112.7300],
+    gate_in:        [-7.2100, 112.7350],
+    ship_arrival:   [-7.1850, 112.7450],
+    discharge:      [-7.1950, 112.7380],
+    yard_map:       [-7.2020, 112.7350],
+    clearance:      [-7.2020, 112.7350],
+    loading:        [-7.2020, 112.7350],
+    ship_departure: [-7.1800, 112.7500],
+    delivery:       [-7.2200, 112.7200],
+  };
+
   Object.keys(mapMarkers).forEach(id => {
     if (!activeIds.includes(id)) { mapMarkers[id].remove(); delete mapMarkers[id]; }
   });
 
   active.forEach(c => {
     const s = STATUS_CONFIG[c.status] || { label: c.status, color: '#64748b', icon: '📦' };
-    const lat = parseFloat(c.position_lat) || -7.2575;
-    const lng = parseFloat(c.position_lng) || 112.7521;
+    const basePos = ZONES[c.status] || [-7.2000, 112.7350];
+    const lat = basePos[0] + (Math.random() - 0.5) * 0.0018;
+    const lng = basePos[1] + (Math.random() - 0.5) * 0.0018;
 
-    const iconHtml = `<div style="background:${s.color};color:white;padding:4px 10px;border-radius:20px;font-size:10px;font-weight:700;white-space:nowrap;box-shadow:0 3px 10px rgba(0,0,0,.4)">${s.icon} ${c.id}</div>`;
+    const iconHtml = `
+      <div style="background:${s.color}; color:white; padding:4px 12px; border-radius:20px; font-size:10px; font-weight:700; white-space:nowrap; box-shadow:0 4px 12px rgba(0,0,0,.5); border:2px solid rgba(255,255,255,.3); transform:translate(-50%, -50%);">
+        ${s.icon} ${c.id}
+      </div>`;
     const icon = L.divIcon({ html: iconHtml, className: '', iconAnchor: [0, 0] });
-    const popup = `<b>${c.id}</b><br>${c.vessel}<br>${c.origin}→${c.destination}<br>📍 ${c.position_desc || '-'}`;
+    const popup = `
+      <div style="font-family:var(--font); color:#333; min-width:140px">
+        <b style="color:var(--bg); font-size:13px">${c.id}</b><br>
+        <span style="font-size:11px;color:#666">🚢 ${c.vessel || '-'}</span><br>
+        <div style="margin-top:8px; padding:4px 10px; border-radius:10px; background:${s.bg || 'rgba(0,0,0,0.1)'}; color:${s.color}; font-size:11px; font-weight:700; display:inline-block">
+          ${s.icon} ${s.label}
+        </div>
+      </div>`;
 
     if (mapMarkers[c.id]) {
       mapMarkers[c.id].setLatLng(L.latLng(lat, lng));
@@ -355,17 +379,16 @@ window.refreshMapMarkers = async function() {
 
   document.getElementById('trackingList').innerHTML = active.map(c => {
     const s = STATUS_CONFIG[c.status] || {};
-    const lat = parseFloat(c.position_lat) || -7.2575;
-    const lng = parseFloat(c.position_lng) || 112.7521;
-    return `<div data-id="${c.id}" style="padding:10px;border:1px solid var(--border);border-radius:10px;margin-bottom:8px;cursor:pointer"
-      onclick="mapInstance.setView([${lat},${lng}],14);mapMarkers['${c.id}']?.openPopup()">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <span class="mono">${c.id}</span>${statusBadge(c.status)}
+    const basePos = ZONES[c.status] || [-7.2000, 112.7350];
+    return `<div data-id="${c.id}" style="padding:10px; border:1px solid var(--border); border-radius:10px; margin-bottom:8px; cursor:pointer"
+      onclick="mapInstance.setView([${basePos[0]},${basePos[1]}],16); mapMarkers['${c.id}']?.openPopup()">
+      <div style="display:flex; justify-content:space-between; align-items:center">
+        <span class="mono" style="color:var(--white)">${c.id}</span>${statusBadge(c.status)}
       </div>
-      <div style="font-size:11px;color:var(--gray);margin-top:4px">📍 ${c.position_desc || '-'}</div>
-      <div style="font-size:10px;color:var(--gray)">${c.vessel} · ${c.origin}→${c.destination}</div>
+      <div style="font-size:11px; color:var(--gray); margin-top:4px">📍 ${c.position_desc || '-'}</div>
+      <div style="font-size:10px; color:var(--gray)">${c.vessel} · ${c.origin}→${c.destination}</div>
     </div>`;
-  }).join('') || '<div style="color:var(--gray);text-align:center;padding:20px;font-size:12px">Tidak ada kontainer aktif</div>';
+  }).join('') || '<div style="color:var(--gray); text-align:center; padding:20px; font-size:12px">Tidak ada kontainer aktif</div>';
 
   document.getElementById('mapLegend').innerHTML = [...new Set(active.map(c => c.status))].map(st => {
     const s = STATUS_CONFIG[st] || {};
