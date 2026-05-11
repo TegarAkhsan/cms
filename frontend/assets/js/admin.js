@@ -666,8 +666,10 @@ async function updateBadges() {
 }
 
 // ── MODAL CLOSE
-function closeModal(id) {
-  document.getElementById(id).classList.remove('open');
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function showSuccessModal(msg) {
+  document.getElementById('successMsg').textContent = msg;
+  document.getElementById('modalSuccess').classList.add('open');
 }
 document.querySelectorAll('.modal-overlay').forEach(m => {
   m.addEventListener('click', e => { if (e.target === m) closeModal(m.id); });
@@ -675,7 +677,7 @@ document.querySelectorAll('.modal-overlay').forEach(m => {
 
 window.downloadDocExcel = async function() {
   if (!_allDocData || _allDocData.length === 0) {
-    alert('Tidak ada data dokumen untuk diunduh'); return;
+    showSuccessModal('Tidak ada data dokumen untuk diunduh'); return;
   }
 
   const filterDate = document.getElementById('docDate')?.value || '';

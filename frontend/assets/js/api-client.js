@@ -63,6 +63,11 @@ const API = {
     createUser: (d) => API.call('users.php', 'POST', d),
     updateUser: (d) => API.call('users.php', 'PUT',  d),
     deleteUser: (id) => API.call('users.php', 'DELETE', { id }),
+
+    // Ships
+    getShips:   (p = {}) => API.call('ships.php', 'GET', p),
+    createShip: (d)      => API.call('ships.php', 'POST', d),
+    deleteShip: (id)     => API.call('ships.php', 'DELETE', { id }),
 };
 
 // ── STATUS CONFIG ─────────────────────────────────────────

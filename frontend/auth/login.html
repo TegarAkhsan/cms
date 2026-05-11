@@ -10,13 +10,15 @@
     rel="stylesheet">
   <style>
     :root {
-      --navy: #080f1e;
-      --blue: #1a4fd6;
-      --cyan: #00d4ff;
+      --navy: #f8fafc;
+      --bg-gradient: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+      --blue: #2563eb;
+      --cyan: #0ea5e9;
       --green: #10b981;
       --red: #ef4444;
-      --gray: #94a3b8;
-      --white: #fff;
+      --gray: #64748b;
+      --white: #1e293b;
+      --card-bg: #ffffff;
     }
 
     * {
@@ -27,7 +29,7 @@
 
     body {
       font-family: 'Space Grotesk', sans-serif;
-      background: var(--navy);
+      background: var(--bg-gradient);
       min-height: 100vh;
       display: flex;
       align-items: center;
@@ -39,7 +41,7 @@
       content: '';
       position: fixed;
       inset: 0;
-      background: radial-gradient(ellipse 80% 50% at 20% 40%, rgba(26, 79, 214, .18) 0, transparent 60%), radial-gradient(ellipse 60% 40% at 80% 70%, rgba(0, 212, 255, .1) 0, transparent 60%);
+      background: radial-gradient(ellipse 80% 50% at 20% 40%, rgba(37, 99, 235, .08) 0, transparent 60%), radial-gradient(ellipse 60% 40% at 80% 70%, rgba(14, 165, 233, .05) 0, transparent 60%);
       pointer-events: none;
     }
 
@@ -47,7 +49,7 @@
       content: '';
       position: fixed;
       inset: 0;
-      background-image: linear-gradient(rgba(255, 255, 255, .02) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, .02) 1px, transparent 1px);
+      background-image: linear-gradient(rgba(0, 0, 0, .02) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 0, 0, .02) 1px, transparent 1px);
       background-size: 50px 50px;
       pointer-events: none;
     }
@@ -96,18 +98,18 @@
     }
 
     .card {
-      background: rgba(255, 255, 255, .04);
-      border: 1px solid rgba(255, 255, 255, .08);
+      background: var(--card-bg);
+      border: 1px solid rgba(0, 0, 0, .05);
       border-radius: 24px;
       padding: 32px;
       backdrop-filter: blur(20px);
-      box-shadow: 0 32px 64px rgba(0, 0, 0, .4);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, .1);
     }
 
     .card h2 {
       font-size: 20px;
-      font-weight: 600;
-      color: var(--white);
+      font-weight: 700;
+      color: #1e293b;
       margin-bottom: 4px;
     }
 
@@ -133,11 +135,11 @@
 
     .fg input {
       width: 100%;
-      background: rgba(255, 255, 255, .06);
-      border: 1px solid rgba(255, 255, 255, .1);
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
       border-radius: 12px;
       padding: 13px 15px;
-      color: var(--white);
+      color: #1e293b;
       font-family: 'Space Grotesk', sans-serif;
       font-size: 14px;
       outline: none;
@@ -190,7 +192,7 @@
     .demo {
       margin-top: 22px;
       padding-top: 18px;
-      border-top: 1px solid rgba(255, 255, 255, .06);
+      border-top: 1px solid #f1f5f9;
     }
 
     .demo p {
@@ -226,7 +228,7 @@
     .db .rn {
       font-size: 11px;
       font-weight: 600;
-      color: var(--white);
+      color: #1e293b;
       display: block;
       margin-bottom: 3px;
     }
@@ -324,15 +326,18 @@
           onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--cyan)'">Daftar sekarang</a>
       </div>
 
-      <div class="demo">
-        <p>Akun Demo</p>
-        <div class="demo-grid">
-          <div class="db" onclick="fill('admin','admin123')"><span class="rn"><span class="dot"
-                style="background:#f59e0b"></span>Admin</span><span class="cr">admin / admin123</span></div>
-          <div class="db" onclick="fill('operator1','op123')"><span class="rn"><span class="dot"
-                style="background:#10b981"></span>Operator</span><span class="cr">operator1 / op123</span></div>
-          <div class="db" onclick="fill('stakeholder1','sk123')"><span class="rn"><span class="dot"
-                style="background:#00d4ff"></span>Stakeholder</span><span class="cr">stakeholder1 / sk123</span></div>
+      <div class="demo" id="demoSection">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+          <p style="margin-bottom: 0;">Akun Demo</p>
+          <button onclick="toggleDemo()" id="btnDemoToggle" style="background: none; border: none; color: var(--blue); font-size: 10px; cursor: pointer; text-transform: uppercase; letter-spacing: .8px; font-weight: 700;">Sembunyikan</button>
+        </div>
+        <div class="demo-grid" id="demoGrid">
+          <div class="db" onclick="fill('admin','password')"><span class="rn"><span class="dot"
+                style="background:#f59e0b"></span>Admin</span><span class="cr">admin / password</span></div>
+          <div class="db" onclick="fill('operator1','password')"><span class="rn"><span class="dot"
+                style="background:#10b981"></span>Operator</span><span class="cr">operator1 / password</span></div>
+          <div class="db" onclick="fill('stakeholder1','password')"><span class="rn"><span class="dot"
+                style="background:#00d4ff"></span>Stakeholder</span><span class="cr">stakeholder1 / password</span></div>
         </div>
       </div>
     </div>
@@ -350,6 +355,20 @@
     })();
 
     function fill(u, p) { document.getElementById('u').value = u; document.getElementById('p').value = p; }
+
+    function toggleDemo() {
+      const grid = document.getElementById('demoGrid');
+      const btn = document.getElementById('btnDemoToggle');
+      const isHidden = window.getComputedStyle(grid).display === 'none';
+      
+      if (isHidden) {
+        grid.style.display = 'grid';
+        btn.textContent = 'Sembunyikan';
+      } else {
+        grid.style.display = 'none';
+        btn.textContent = 'Tampilkan';
+      }
+    }
 
     async function doLogin() {
       const u = document.getElementById('u').value.trim();

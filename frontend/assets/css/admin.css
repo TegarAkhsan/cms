@@ -1,22 +1,23 @@
 :root {
-  --bg: #080f1e;
-  --bg2: #0d1729;
-  --sidebar: #060d1a;
-  --card: #0f1e35;
-  --border: rgba(255, 255, 255, .07);
-  --blue: #1a4fd6;
-  --cyan: #00d4ff;
+  --bg: #f3f4f6;
+  --bg2: #ffffff;
+  --sidebar: #ffffff;
+  --card: #ffffff;
+  --border: #e5e7eb;
+  --blue: #2563eb;
+  --cyan: #0ea5e9;
   --green: #10b981;
   --gold: #f59e0b;
   --red: #ef4444;
   --orange: #f97316;
   --purple: #7c3aed;
   --gray: #64748b;
-  --light: #94a3b8;
-  --white: #f1f5f9;
-  --text: #cbd5e1;
+  --light: #4b5563;
+  --white: #111827;
+  --text: #374151;
   --font: 'Space Grotesk', sans-serif;
   --mono: 'JetBrains Mono', monospace;
+  --card-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
 }
 
 * {
@@ -110,14 +111,14 @@ body {
 }
 
 .nav-item:hover {
-  background: rgba(255, 255, 255, .05);
-  color: var(--white);
+  background: #f9fafb;
+  color: var(--blue);
 }
 
 .nav-item.active {
-  background: rgba(26, 79, 214, .2);
-  color: var(--cyan);
-  border: 1px solid rgba(0, 212, 255, .15);
+  background: #eff6ff;
+  color: var(--blue);
+  font-weight: 600;
 }
 
 .nav-item .ni {
@@ -263,6 +264,7 @@ body {
   position: relative;
   overflow: hidden;
   transition: transform .2s;
+  box-shadow: var(--card-shadow);
 }
 
 .stat-card:hover {
@@ -315,6 +317,7 @@ body {
   border-radius: 16px;
   padding: 20px;
   margin-bottom: 16px;
+  box-shadow: var(--card-shadow);
 }
 
 .box-title {
@@ -423,8 +426,8 @@ body {
 }
 
 .btn-ghost {
-  background: rgba(255, 255, 255, .06);
-  color: var(--light);
+  background: #f9fafb;
+  color: var(--gray);
   border: 1px solid var(--border);
 }
 
@@ -502,7 +505,7 @@ body {
 }
 
 .modal {
-  background: var(--bg2);
+  background: #ffffff;
   border: 1px solid var(--border);
   border-radius: 20px;
   width: 620px;

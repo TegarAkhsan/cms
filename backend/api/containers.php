@@ -216,8 +216,9 @@ switch ($method) {
             }
         }
 
-        // Jika status kontainer menjadi 'completed', otomatis set semua dokumen terkait menjadi 'approved'
+        // Jika status kontainer menjadi 'completed', otomatis set semua dokumen terkait menjadi 'approved' dan kosongkan lokasi yard
         if ($newStatus === 'completed') {
+            $pdo->prepare("UPDATE containers SET position_desc = '' WHERE id = ?")->execute([$id]);
             $pdo->prepare("UPDATE documents SET status = 'approved', notes = 'Otomatis disetujui karena kontainer selesai' WHERE container_id = ? AND status != 'approved'")
                 ->execute([$id]);
         }

@@ -29,6 +29,7 @@
       <div class="nav-section">Monitoring</div>
       <button class="nav-item active" onclick="showSection('dashboard')"><span class="ni">📊</span> Dashboard</button>
       <button class="nav-item" onclick="showSection('tracking')"><span class="ni">🗺️</span> Live Tracking</button>
+      <button class="nav-item" onclick="showSection('ships')"><span class="ni">🚢</span> Kapal Saya</button>
       <button class="nav-item" onclick="showSection('containers')"><span class="ni">📦</span> Kontainer Saya</button>
       <button class="nav-item" onclick="showSection('documents')"><span class="ni">📄</span> Dokumen <span class="nb"
           id="nbDoc">0</span></button>
@@ -108,8 +109,30 @@
             <div id="trackList"></div>
           </div>
         </div>
+        </div>
       </div>
-
+ 
+      <div class="section" id="sec-ships">
+        <div class="filter-bar">
+          <input class="search-input" id="shipSearch" placeholder="🔍 Cari kapal (nama, bendera, tipe)..." oninput="renderShips()">
+          <button class="btn btn-primary" onclick="openAddShip()">+ Tambahkan Kapal</button>
+        </div>
+        <div class="box">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Nama Kapal</th>
+                <th>Bendera</th>
+                <th>Tipe Kapal</th>
+                <th>Tanggal Registrasi</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="shipTable"></tbody>
+          </table>
+        </div>
+      </div>
+ 
       <div class="section" id="sec-containers">
         <div class="filter-bar">
           <input class="search-input" id="ctrSearch" placeholder="🔍 Cari kontainer..." oninput="renderContainers()">
@@ -270,7 +293,38 @@
       </div>
     </div>
   </div>
-
+ 
+  <!-- MODAL: Tambah Kapal -->
+  <div class="modal-overlay" id="modalShip">
+    <div class="modal" style="width:500px">
+      <h3 id="modalShipTitle">Tambahkan Kapal</h3>
+      <p class="sub">Daftarkan data kapal baru Anda ke dalam sistem.</p>
+      <div class="form-group">
+        <label>Nama Kapal</label>
+        <input id="s_name" placeholder="Contoh: MV. Nusantara Express">
+      </div>
+      <div class="form-group">
+        <label>Bendera (Negara)</label>
+        <input id="s_flag" placeholder="Contoh: Indonesia, Singapura...">
+      </div>
+      <datalist id="ship_types">
+        <option value="Container Ship">
+        <option value="Bulk Carrier">
+        <option value="Tanker">
+        <option value="General Cargo">
+        <option value="Ro-Ro Ship">
+      </datalist>
+      <div class="form-group">
+        <label>Tipe Kapal</label>
+        <input id="s_type" list="ship_types" placeholder="Pilih atau ketik tipe kapal...">
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal('modalShip')">Batal</button>
+        <button class="btn btn-primary" id="btnSaveShip" onclick="saveShip()">🚀 Simpan Kapal</button>
+      </div>
+    </div>
+  </div>
+ 
   <!-- MODAL: Detail -->
   <div class="modal-overlay" id="modalDetail">
     <div class="modal" style="width:700px">
@@ -321,6 +375,16 @@
         <a id="previewDownloadBtn" href="" target="_blank" class="btn btn-success">⬇️ Download File</a>
         <button class="btn btn-ghost" onclick="closeModal('modalDocPreview')">Tutup</button>
       </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Success Alert -->
+  <div class="modal-overlay" id="modalSuccess">
+    <div class="modal" style="width:360px; text-align:center; padding:40px 30px;">
+      <div style="font-size:50px; margin-bottom:20px;">✅</div>
+      <h3 id="successTitle" style="margin-bottom:10px;">Berhasil!</h3>
+      <p class="sub" id="successMsg" style="margin-bottom:25px; line-height:1.5;"></p>
+      <button class="btn btn-primary" onclick="closeModal('modalSuccess')" style="width:100%; justify-content:center;">Oke</button>
     </div>
   </div>
 

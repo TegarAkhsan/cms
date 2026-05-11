@@ -144,10 +144,10 @@ async function saveStatus() {
       position_lng: document.getElementById('newLng').value,
       note: document.getElementById('statusNote').value,
     });
-    if (res.error) { alert(res.error); return; }
+    if (res.error) { showSuccessModal(res.error, 'Gagal', '❌'); return; }
     closeModal('modalStatus');
     await renderDashboard(); await renderContainers(); await updateBadges();
-    alert('✅ Status berhasil diupdate dan sinkron ke semua dashboard!');
+    showSuccessModal('Status berhasil diupdate dan sinkron ke semua dashboard!');
   } finally {
     isSavingStatus = false;
   }
@@ -200,7 +200,7 @@ async function updateDoc(id, status, notes) {
   isUpdatingDoc = true;
   try {
     const res = await API.updateDocument({ id, status, notes });
-    if (res.error) { alert(res.error); return; }
+    if (res.error) { showSuccessModal(res.error, 'Gagal', '❌'); return; }
     await renderDocuments(); await updateBadges();
   } finally {
     isUpdatingDoc = false;
@@ -208,8 +208,13 @@ async function updateDoc(id, status, notes) {
 }
 
 function promptRevision(id) {
-  const note = prompt('Alasan revisi:');
-  if (note !== null) updateDoc(id, 'revision', note || 'Perlu revisi');
+  document.getElementById('promptInput').value = '';
+  document.getElementById('modalPrompt').classList.add('open');
+  document.getElementById('btnPromptConfirm').onclick = async () => {
+    const note = document.getElementById('promptInput').value.trim();
+    closeModal('modalPrompt');
+    await updateDoc(id, 'revision', note || 'Perlu revisi');
+  };
 }
 
 async function openUploadDoc() {
@@ -233,10 +238,10 @@ async function saveDoc() {
 
     const res = await fetch(API.base + '/documents.php', { method: 'POST', credentials: 'include', body: formData });
     const data = await res.json();
-    if (data.error) { alert(data.error); return; }
+    if (data.error) { showSuccessModal(data.error, 'Gagal', '❌'); return; }
     closeModal('modalUpload');
     await renderDocuments(); await updateBadges();
-    alert('✅ Dokumen berhasil diupload!');
+    showSuccessModal('Dokumen berhasil diupload!');
   } finally {
     isSavingDocOp = false;
   }
@@ -315,7 +320,7 @@ window.yardBlockClick = async function (blockId) {
     contentHtml += `<div style="font-size:12px;font-weight:700;margin-bottom:8px;color:var(--cyan)">Tambah Alokasi Kontainer</div>`;
 
     const allCtrs = await API.getContainers();
-    const pendingCtrs = allCtrs.filter(c => ['booking', 'gate_in', 'ship_arrival', 'discharge'].includes(c.status) && !c.position_desc?.includes(`Yard ${blockId}`));
+    const pendingCtrs = allCtrs.filter(c => ['gate_in', 'discharge', 'clearance'].includes(c.status) && !c.position_desc?.includes(`Yard ${blockId}`));
     window._pendingCtrsForYard = pendingCtrs;
 
     if (pendingCtrs.length > 0) {
@@ -358,34 +363,34 @@ window.allocateYard = async function (blockId) {
   isAllocatingYard = true;
   try {
     const sel = document.getElementById('yardSelCtr').value;
-    if (!sel) { alert('Pilih kontainer terlebih dahulu'); return; }
+    if (!sel) { showSuccessModal('Pilih kontainer terlebih dahulu', 'Perhatian', '⚠️'); return; }
 
     // Update API
     const res = await API.updateContainer({ id: sel, position_desc: `Yard ${blockId}, Tanjung Perak`, status: 'yard_map' });
-    if (res.error) { alert(res.error); return; }
+    if (res.error) { showSuccessModal(res.error, 'Gagal', '❌'); return; }
 
     closeModal('modalDetail');
     await renderYard();
-    alert('✅ Kontainer ' + sel + ' berhasil dialokasikan ke Yard ' + blockId);
+    showSuccessModal('Kontainer ' + sel + ' berhasil dialokasikan ke Yard ' + blockId);
   } finally {
     isAllocatingYard = false;
   }
 };
 
-let isRemovingYard = false;
-window.removeFromYard = async function (id, blockId) {
-  if (isRemovingYard) return;
-  isRemovingYard = true;
-  try {
-    if (!confirm('Hapus kontainer ' + id + ' dari Yard ' + blockId + '?')) return;
-    const res = await API.updateContainer({ id: id, position_desc: '' });
-    if (res.error) { alert(res.error); return; }
-    closeModal('modalDetail');
-    await renderYard();
-    alert('✅ Kontainer ' + id + ' berhasil dihapus dari Yard ' + blockId);
-  } finally {
-    isRemovingYard = false;
-  }
+window.removeFromYard = function (id, blockId) {
+  showConfirm('Hapus Kontainer', 'Hapus kontainer ' + id + ' dari Yard ' + blockId + '?', async () => {
+    if (isRemovingYard) return;
+    isRemovingYard = true;
+    try {
+      const res = await API.updateContainer({ id: id, position_desc: '' });
+      if (res.error) { showSuccessModal(res.error, 'Gagal', '❌'); return; }
+      closeModal('modalDetail');
+      await renderYard();
+      showSuccessModal('Kontainer ' + id + ' berhasil dihapus dari Yard ' + blockId);
+    } finally {
+      isRemovingYard = false;
+    }
+  });
 };
 
 async function renderTracking() {
@@ -544,11 +549,31 @@ window.markAllRead = async function() {
 }
 
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function showSuccessModal(msg, title = 'Berhasil!', icon = '✅') {
+  document.getElementById('successTitle').textContent = title;
+  document.getElementById('successIcon').textContent = icon;
+  document.getElementById('successMsg').textContent = msg;
+  document.getElementById('modalSuccess').classList.add('open');
+}
+
+let confirmCallback = null;
+function showConfirm(title, msg, onConfirm) {
+  document.getElementById('confirmTitle').textContent = title;
+  document.getElementById('confirmMsg').textContent = msg;
+  confirmCallback = onConfirm;
+  document.getElementById('modalConfirm').classList.add('open');
+  document.getElementById('btnConfirmAction').onclick = async () => {
+    if (confirmCallback) await confirmCallback();
+    closeModal('modalConfirm');
+    confirmCallback = null;
+  };
+}
+
 document.querySelectorAll('.modal-overlay').forEach(m => { m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); }); });
 
 async function downloadDocExcel() {
   if (!_allDocData || _allDocData.length === 0) {
-    alert('Tidak ada data dokumen untuk diunduh'); return;
+    showSuccessModal('Tidak ada data dokumen untuk diunduh', 'Perhatian', '⚠️'); return;
   }
 
   const filterDate = document.getElementById('docDate')?.value || '';

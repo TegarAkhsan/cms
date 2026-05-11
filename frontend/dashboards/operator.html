@@ -280,6 +280,44 @@
     </div>
   </div>
 
+  <!-- MODAL: Success Alert -->
+  <div class="modal-overlay" id="modalSuccess">
+    <div class="modal" style="width:360px; text-align:center; padding:40px 30px;">
+      <div id="successIcon" style="font-size:50px; margin-bottom:20px;">✅</div>
+      <h3 id="successTitle" style="margin-bottom:10px;">Berhasil!</h3>
+      <p class="sub" id="successMsg" style="margin-bottom:25px; line-height:1.5;"></p>
+      <button class="btn btn-primary" onclick="closeModal('modalSuccess')" style="width:100%; justify-content:center;">Oke</button>
+    </div>
+  </div>
+
+  <!-- MODAL: Prompt Revision -->
+  <div class="modal-overlay" id="modalPrompt">
+    <div class="modal" style="width:400px;">
+      <h3>Alasan Revisi</h3>
+      <p class="sub">Berikan catatan alasan mengapa dokumen ini perlu direvisi.</p>
+      <div class="form-group" style="margin-top:20px;">
+        <textarea id="promptInput" style="height:100px;" placeholder="Tulis alasan revisi di sini..."></textarea>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal('modalPrompt')">Batal</button>
+        <button class="btn btn-danger" id="btnPromptConfirm">Kirim Revisi</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Konfirmasi -->
+  <div class="modal-overlay" id="modalConfirm">
+    <div class="modal" style="width:400px; text-align:center; padding:30px;">
+      <div style="font-size:48px; margin-bottom:16px;">⚠️</div>
+      <h3 id="confirmTitle">Konfirmasi</h3>
+      <p class="sub" id="confirmMsg"></p>
+      <div class="modal-footer" style="justify-content:center; border:none; margin-top:20px; padding:0;">
+        <button class="btn btn-ghost" onclick="closeModal('modalConfirm')">Batal</button>
+        <button class="btn btn-danger" id="btnConfirmAction">Ya, Lanjutkan</button>
+      </div>
+    </div>
+  </div>
+
   <script src="../assets/js/api-client.js"></script>
   <script src="../assets/js/operator.js"></script>
 </body>

@@ -26,10 +26,58 @@ async function showSection(name) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('sec-' + name).classList.add('active');
   document.querySelector(`.nav-item[onclick*="${name}"]`).classList.add('active');
+  if (name === 'ships') await renderShips();
   if (name === 'containers') await renderContainers();
   if (name === 'documents') await renderDocuments();
   if (name === 'tracking') await renderTracking();
   if (name === 'notifications') await renderNotifications();
+}
+
+async function renderShips() {
+  const data = await API.getShips({ search: document.getElementById('shipSearch').value });
+  const ships = data.ships || [];
+  document.getElementById('shipTable').innerHTML = ships.map(s => `
+    <tr>
+      <td><b style="color:var(--text)">${s.name}</b></td>
+      <td>${s.flag}</td>
+      <td><span class="badge" style="background:rgba(37,99,235,.1);color:var(--blue)">${s.type}</span></td>
+      <td style="color:var(--gray)">${formatDate(s.created_at)}</td>
+      <td>
+        <button class="btn btn-ghost btn-sm" onclick="deleteShip(${s.id})">🗑️</button>
+      </td>
+    </tr>
+  `).join('') || '<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--gray)">Belum ada kapal yang didaftarkan</td></tr>';
+}
+
+function openAddShip() {
+  document.getElementById('s_name').value = '';
+  document.getElementById('s_flag').value = '';
+  document.getElementById('s_type').value = '';
+  document.getElementById('modalShip').classList.add('open');
+}
+
+async function saveShip() {
+  const data = {
+    name: document.getElementById('s_name').value.trim(),
+    flag: document.getElementById('s_flag').value.trim(),
+    type: document.getElementById('s_type').value.trim()
+  };
+  if (!data.name || !data.flag || !data.type) { showSuccessModal('Harap isi semua data kapal', 'Perhatian', '⚠️'); return; }
+
+  const res = await API.createShip(data);
+  if (res.error) { showSuccessModal(res.error, 'Gagal', '❌'); return; }
+  
+  closeModal('modalShip');
+  await renderShips();
+  showSuccessModal('Kapal berhasil didaftarkan!');
+}
+
+async function deleteShip(id) {
+  if (!confirm('Hapus data kapal ini?')) return;
+  const res = await API.deleteShip(id);
+  if (res.error) { showSuccessModal(res.error, 'Gagal', '❌'); return; }
+  await renderShips();
+  showSuccessModal('Kapal berhasil dihapus');
 }
 
 let statusChartInst = null;
@@ -85,7 +133,7 @@ async function renderDashboard() {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
-      legend: { position: 'right', labels: { color: '#cbd5e1', font: { family: "'Space Grotesk', sans-serif", size: 10 }, boxWidth: 12 } }
+      legend: { position: 'right', labels: { color: '#4b5563', font: { family: "'Space Grotesk', sans-serif", size: 10 }, boxWidth: 12 } }
     }
   };
 
@@ -360,11 +408,8 @@ async function openEditContainer(id) {
 }
 
 function showSuccessModal(msg) {
-  if (typeof showToast === 'function') {
-    showToast(msg, 'success');
-  } else {
-    alert(msg);
-  }
+  document.getElementById('successMsg').textContent = msg;
+  document.getElementById('modalSuccess').classList.add('open');
 }
 
 async function openUploadDoc() {
@@ -430,7 +475,7 @@ document.querySelectorAll('.modal-overlay').forEach(m => { m.addEventListener('c
 
 async function downloadDocExcel() {
   if (!_allDocData || _allDocData.length === 0) {
-    alert('Tidak ada data dokumen untuk diunduh'); return;
+    showSuccessModal('Tidak ada data dokumen untuk diunduh'); return;
   }
 
   const filterDate = document.getElementById('docDate')?.value || '';
@@ -463,7 +508,7 @@ async function downloadDocExcel() {
 
 async function openEditDoc(id) {
   const doc = _allDocData.find(d => d.id === id);
-  if (!doc) { alert('Dokumen tidak ditemukan'); return; }
+  if (!doc) { showSuccessModal('Dokumen tidak ditemukan'); return; }
 
   editDocId = id;
   document.getElementById('modalUploadTitle').textContent = 'Edit Dokumen';

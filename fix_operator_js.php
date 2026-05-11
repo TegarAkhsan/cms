@@ -299,7 +299,7 @@ window.yardBlockClick = async function(blockId) {
         contentHtml += `<div style="font-size:12px;font-weight:700;margin-bottom:8px;color:var(--cyan)">Tambah Alokasi Kontainer</div>`;
         
         const allCtrs = await API.getContainers();
-        const pendingCtrs = allCtrs.filter(c => ['booking', 'gate_in', 'ship_arrival', 'discharge'].includes(c.status) && !c.position_desc?.includes(`Yard ${blockId}`));
+        const pendingCtrs = allCtrs.filter(c => ['gate_in', 'discharge', 'clearance'].includes(c.status) && !c.position_desc?.includes(`Yard ${blockId}`));
         window._pendingCtrsForYard = pendingCtrs;
         
         if (pendingCtrs.length > 0) {
