@@ -115,6 +115,10 @@ switch ($method) {
                 ->execute([$docId, $container_id, $type, $filename, $filepath, $status, $user['id'], $input['notes'] ?? '']);
         }
 
+        // Notif ke admin (user 1)
+        $pdo->prepare("INSERT INTO notifications (id,user_id,container_id,message,type) VALUES (?,?,?,?,?)")
+            ->execute([genId('NTF'), 1, $container_id, "Dokumen baru ($type) diupload oleh {$user['name']}", 'info']);
+
         // Notif ke operator jika stakeholder upload
         if ($user['role'] === 'stakeholder' && $container['operator_id']) {
             $pdo->prepare("INSERT INTO notifications (id,user_id,container_id,message,type) VALUES (?,?,?,?,?)")

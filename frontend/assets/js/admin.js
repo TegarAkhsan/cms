@@ -7,10 +7,24 @@ let editingCtr = null;
 let editingDoc = null;
 let editingUser = null;
 let _allReportData = [];
+let confirmCallback = null;
+
+window.showConfirm = function(title, msg, onConfirm) {
+  document.getElementById('confirmTitle').textContent = title;
+  document.getElementById('confirmMsg').textContent = msg;
+  confirmCallback = onConfirm;
+  document.getElementById('modalConfirm').classList.add('open');
+  
+  document.getElementById('btnConfirmAction').onclick = async () => {
+    if (confirmCallback) await confirmCallback();
+    closeModal('modalConfirm');
+    confirmCallback = null;
+  };
+};
 
 const ITEMS_PER_PAGE = 10;
 
-function buildPagination(total, page, callbackName) {
+window.buildPagination = function(total, page, callbackName) {
   const pages = Math.ceil(total / ITEMS_PER_PAGE);
   if (pages <= 1) return '';
   let html = `<button class="btn btn-sm btn-ghost" onclick="${callbackName}(${page - 1})" ${page === 1 ? 'disabled' : ''}>&laquo;</button>`;
@@ -55,7 +69,7 @@ const PAGE_TITLES = {
   reports: ['Laporan & Statistik', 'CMS › Laporan'],
 };
 
-async function showSection(name) {
+window.showSection = async function(name) {
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('sec-' + name).classList.add('active');
@@ -75,7 +89,7 @@ async function showSection(name) {
 }
 
 // ── DASHBOARD
-async function renderDashboard() {
+window.renderDashboard = async function() {
   const [stats, notifs, ctrs] = await Promise.all([
     API.getStats(), API.getNotifications(), API.getContainers()
   ]);
@@ -139,7 +153,7 @@ async function renderDashboard() {
 }
 
 // ── CONTAINERS
-async function renderContainers(page = 1) {
+window.renderContainers = async function(page = 1) {
   const data = await API.getContainers({
     search: document.getElementById('ctrSearch').value,
     status: document.getElementById('ctrFilter').value,
@@ -164,16 +178,21 @@ async function renderContainers(page = 1) {
   document.getElementById('pg-container').innerHTML = buildPagination(data.length, page, 'renderContainers');
 }
 
-async function deleteContainer(id) {
-  if (!confirm(`Hapus kontainer ${id}?\\n\\nSemua data terkait akan ikut terhapus.`)) return;
-  const res = await API.deleteContainer(id);
-  if (res.error) { showToast(res.error, 'error'); return; }
-  await renderContainers();
-  await updateBadges();
-  showToast(`🗑️ Kontainer ${id} berhasil dihapus`);
+window.deleteContainer = function(id) {
+  showConfirm(
+    'Hapus Kontainer',
+    `Apakah Anda yakin ingin menghapus kontainer ${id}? Semua data dokumen dan event terkait akan ikut terhapus secara permanen.`,
+    async () => {
+      const res = await API.deleteContainer(id);
+      if (res.error) { showToast(res.error, 'error'); return; }
+      await renderContainers();
+      await updateBadges();
+      showToast(`🗑️ Kontainer ${id} berhasil dihapus`);
+    }
+  );
 }
 
-async function viewDetail(id) {
+window.viewDetail = async function(id) {
   const c = await API.getContainer(id);
   if (!c) return;
   document.getElementById('detailTitle').textContent = `Detail: ${c.id}`;
@@ -202,7 +221,7 @@ async function viewDetail(id) {
 
 // ── DOCUMENTS
 let _allDocData = [];
-async function renderDocuments(page = 1) {
+window.renderDocuments = async function(page = 1) {
   const reqData = {
     search: document.getElementById('docSearch')?.value || '',
     status: document.getElementById('docFilter')?.value || '',
@@ -243,7 +262,21 @@ async function renderDocuments(page = 1) {
   document.getElementById('pg-document').innerHTML = buildPagination(filtered.length, page, 'renderDocuments');
 }
 
-function openDocStatus(id, status, type) {
+window.deleteDocument = function(id) {
+  showConfirm(
+    'Hapus Dokumen',
+    `Apakah Anda yakin ingin menghapus dokumen ${id}? File akan dihapus permanen dari server.`,
+    async () => {
+      const res = await API.deleteDocument(id);
+      if (res.error) { showToast(res.error, 'error'); return; }
+      await renderDocuments();
+      await updateBadges();
+      showToast(`🗑️ Dokumen ${id} berhasil dihapus`);
+    }
+  );
+}
+
+window.openDocStatus = function(id, status, type) {
   editingDoc = id;
   document.getElementById('docStatusSub').textContent = `Dokumen: ${type} (${id})`;
   document.getElementById('newDocStatus').value = status;
@@ -252,7 +285,7 @@ function openDocStatus(id, status, type) {
 }
 
 let isSavingDocStatus = false;
-async function saveDocStatus() {
+window.saveDocStatus = async function() {
   if (isSavingDocStatus) return;
   isSavingDocStatus = true;
   try {
@@ -272,7 +305,7 @@ async function saveDocStatus() {
 }
 
 // ── LIVE TRACKING
-async function renderTracking() {
+window.renderTracking = async function() {
   if (!mapInstance) {
     mapInstance = L.map('adminMap').setView([-7.2575, 112.7521], 9);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -290,7 +323,7 @@ async function renderTracking() {
   }
 }
 
-async function refreshMapMarkers() {
+window.refreshMapMarkers = async function() {
   const containers = await API.getContainers();
   const active = containers.filter(c => c.status !== 'completed');
   const activeIds = active.map(c => c.id);
@@ -341,7 +374,7 @@ async function refreshMapMarkers() {
 }
 
 // ── USERS
-async function renderUsers() {
+window.renderUsers = async function() {
   const users = await API.getUsers();
   const rc = { admin: '#f59e0b', operator: '#10b981', stakeholder: '#00d4ff' };
   document.getElementById('userTable').innerHTML = (users || []).map(u =>
@@ -365,7 +398,7 @@ async function renderUsers() {
 }
 
 let isVerifyingUser = false;
-async function verifyUser(id, name, email, port, role) {
+window.verifyUser = async function(id, name, email, port, role) {
   if (isVerifyingUser) return;
   isVerifyingUser = true;
   try {
@@ -380,7 +413,7 @@ async function verifyUser(id, name, email, port, role) {
   }
 }
 
-function openAddUser() {
+window.openAddUser = function() {
   editingUser = null;
   document.getElementById('modalUserTitle').textContent = 'Tambah Pengguna Baru';
   ['u_username', 'u_password', 'u_name', 'u_email', 'u_port'].forEach(id => document.getElementById(id).value = '');
@@ -388,7 +421,7 @@ function openAddUser() {
   document.getElementById('modalUser').classList.add('open');
 }
 
-function openEditUser(id, username, name, role, email, port) {
+window.openEditUser = function(id, username, name, role, email, port) {
   editingUser = id;
   document.getElementById('modalUserTitle').textContent = `Edit Pengguna: ${name}`;
   document.getElementById('u_username').value = username;
@@ -401,7 +434,7 @@ function openEditUser(id, username, name, role, email, port) {
 }
 
 let isSavingUser = false;
-async function saveUser() {
+window.saveUser = async function() {
   if (isSavingUser) return;
   isSavingUser = true;
   try {
@@ -424,41 +457,72 @@ async function saveUser() {
   }
 }
 
-async function deleteUser(id) {
-  if (!confirm('Hapus pengguna ini?')) return;
-  const res = await API.deleteUser(id);
-  if (res.error) { showToast(res.error, 'error'); return; }
-  await renderUsers();
-  showToast('🗑️ Pengguna berhasil dihapus');
+window.deleteUser = function(id) {
+  showConfirm(
+    'Hapus Pengguna',
+    'Apakah Anda yakin ingin menghapus pengguna ini? Akses pengguna tersebut akan langsung dicabut.',
+    async () => {
+      const res = await API.deleteUser(id);
+      if (res.error) { showToast(res.error, 'error'); return; }
+      await renderUsers();
+      showToast('🗑️ Pengguna berhasil dihapus');
+    }
+  );
 }
 
 // ── NOTIFICATIONS
-async function renderNotifications(page = 1) {
+window.renderNotifications = async function(page = 1) {
   const data = await API.getNotifications();
-  const notifs = data.notifications || [];
+  let notifs = data.notifications || [];
+
+  const filterType = document.getElementById('notifFilterType')?.value || '';
+  const searchVal = document.getElementById('notifSearch')?.value.toLowerCase() || '';
+
+  if (filterType || searchVal) {
+    notifs = notifs.filter(n => {
+      const msg = n.message.toLowerCase();
+      const cid = (n.container_id || '').toLowerCase();
+      const vessel = (n.vessel || '').toLowerCase();
+      const commodity = (n.commodity || '').toLowerCase();
+      
+      let matchType = true;
+      if (filterType === 'container') matchType = msg.includes('kontainer') || msg.includes('container');
+      else if (filterType === 'document') matchType = msg.includes('dokumen') || msg.includes('document');
+
+      let matchSearch = true;
+      if (searchVal) {
+        matchSearch = msg.includes(searchVal) || cid.includes(searchVal) || vessel.includes(searchVal) || commodity.includes(searchVal);
+      }
+
+      return matchType && matchSearch;
+    });
+  }
+
   const start = (page - 1) * ITEMS_PER_PAGE;
   const sliced = notifs.slice(start, start + ITEMS_PER_PAGE);
 
-  document.getElementById('unreadCount').textContent = `${data.unread_count} belum dibaca`;
+  document.getElementById('unreadCount').textContent = `${notifs.filter(n => !n.is_read).length} belum dibaca`;
   const nc = { success: '#10b981', warning: '#f59e0b', danger: '#ef4444', info: '#00d4ff' };
+  
   document.getElementById('notifList').innerHTML = sliced.map(n =>
     `<div class="notif-item ${n.is_read ? '' : 'unread'}" onclick="markRead('${n.id}')">
       <div class="notif-dot" style="background:${nc[n.type] || '#64748b'}"></div>
       <div style="flex:1">
         <div style="font-size:12px">${n.message}</div>
-        <div style="font-size:10px;color:var(--gray)">📦 ${n.container_id || '-'} · ${formatDateTime(n.created_at)}</div>
+        <div style="font-size:10px;color:var(--gray)">📦 ${n.container_id || '-'} ${n.vessel ? `· 🚢 ${n.vessel}` : ''} · ${formatDateTime(n.created_at)}</div>
       </div>
       ${!n.is_read ? '<span style="font-size:10px;color:var(--cyan)">BARU</span>' : ''}
     </div>`
   ).join('') || '<div style="color:var(--gray);text-align:center;padding:30px">Tidak ada notifikasi</div>';
+  
   document.getElementById('pg-notif').innerHTML = buildPagination(notifs.length, page, 'renderNotifications');
 }
 
-async function markRead(id) { await API.markRead(id); await renderNotifications(); await updateBadges(); }
-async function markAllRead() { await API.markRead('all'); await renderNotifications(); await updateBadges(); }
+window.markRead = async function(id) { await API.markRead(id); await renderNotifications(); await updateBadges(); }
+window.markAllRead = async function() { await API.markRead('all'); await renderNotifications(); await updateBadges(); }
 
 // ── REPORTS
-async function renderReports() {
+window.renderReports = async function() {
   const month = document.getElementById('rptMonth').value;
   const year = document.getElementById('rptYear').value;
 
@@ -533,7 +597,7 @@ async function renderReports() {
 }
 
 // ── DOWNLOAD EXCEL
-async function downloadExcel() {
+window.downloadExcel = async function() {
   if (_allReportData.length === 0) {
     await renderReports();
   }
@@ -586,7 +650,7 @@ document.querySelectorAll('.modal-overlay').forEach(m => {
   m.addEventListener('click', e => { if (e.target === m) closeModal(m.id); });
 });
 
-async function downloadDocExcel() {
+window.downloadDocExcel = async function() {
   if (!_allDocData || _allDocData.length === 0) {
     alert('Tidak ada data dokumen untuk diunduh'); return;
   }

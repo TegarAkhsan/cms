@@ -7,7 +7,12 @@ $pdo   = getDB();
 $input = getInput();
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    $stmt = $pdo->prepare("SELECT * FROM notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT 50");
+    $sql = "SELECT n.*, c.vessel, c.commodity
+            FROM notifications n 
+            LEFT JOIN containers c ON n.container_id = c.id 
+            WHERE n.user_id = ? 
+            ORDER BY n.created_at DESC LIMIT 100";
+    $stmt = $pdo->prepare($sql);
     $stmt->execute([$user['id']]);
     $notifs = $stmt->fetchAll();
     $unread = count(array_filter($notifs, fn($n) => !$n['is_read']));

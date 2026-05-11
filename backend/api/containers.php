@@ -139,8 +139,11 @@ switch ($method) {
             ->execute([genId('NTF'), 1, $id, "Kontainer baru terdaftar: $id", 'info']);
 
         // Notif stakeholder (pemilik)
-        $pdo->prepare("INSERT INTO notifications (id,user_id,container_id,message,type) VALUES (?,?,?,?,?)")
-            ->execute([genId('NTF'), $user['id'], $id, "Anda telah mendaftarkan kontainer baru: $id", 'success']);
+        if ($owner_id && $owner_id != 1) {
+            $msg = ($user['id'] == $owner_id) ? "Anda telah mendaftarkan kontainer baru: $id" : "Kontainer baru telah didaftarkan untuk Anda: $id";
+            $pdo->prepare("INSERT INTO notifications (id,user_id,container_id,message,type) VALUES (?,?,?,?,?)")
+                ->execute([genId('NTF'), $owner_id, $id, $msg, 'success']);
+        }
 
         jsonResponse(['success' => true, 'id' => $id]);
         break;
