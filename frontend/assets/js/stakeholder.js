@@ -29,16 +29,26 @@ async function showSection(name) {
   if (name === 'containers') await renderContainers();
   if (name === 'documents') await renderDocuments();
   if (name === 'tracking') await renderTracking();
+  if (name === 'notifications') await renderNotifications();
 }
 
 let statusChartInst = null;
 let typeChartInst = null;
 
 async function renderDashboard() {
-  const [stats, notifs, ctrs] = await Promise.all([API.getStats(), API.getNotifications(), API.getContainers()]);
+  const [stats, notifs, ctrs, docs] = await Promise.all([API.getStats(), API.getNotifications(), API.getContainers(), API.getDocuments()]);
   document.getElementById('kpiTotal').textContent = stats.total || ctrs.length;
   document.getElementById('kpiActive').textContent = stats.in_transit || ctrs.filter(c => c.status !== 'completed').length;
   document.getElementById('kpiDone').textContent = stats.completed || ctrs.filter(c => c.status === 'completed').length;
+
+  // Update Badges
+  const unreadNotifs = notifs.notifications.filter(n => !n.is_read).length;
+  document.getElementById('nbNotif').textContent = unreadNotifs;
+  document.getElementById('nbNotif').style.display = unreadNotifs > 0 ? 'block' : 'none';
+  
+  const pendingDocs = docs.filter(d => d.status === 'pending').length;
+  document.getElementById('nbDoc').textContent = pendingDocs;
+  document.getElementById('nbDoc').style.display = pendingDocs > 0 ? 'block' : 'none';
 
   document.getElementById('dashNotif').innerHTML = notifs.notifications.slice(0, 4).map(n => `
     <div class="notif-item ${n.is_read ? '' : 'unread'}">
@@ -179,7 +189,6 @@ async function renderContainers(page = 1) {
     <td>
       <button class="btn btn-ghost btn-sm" title="View" onclick="viewDetail('${c.id}')">👁</button>
       <button class="btn btn-ghost btn-sm" title="Edit/Update" onclick="openEditContainer('${c.id}')">✏️</button>
-      <button class="btn btn-danger btn-sm" title="Delete" onclick="deleteContainer('${c.id}')">🗑</button>
     </td></tr>
   `).join('') || '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--gray)">Tidak ada data</td></tr>';
   document.getElementById('pg-container').innerHTML = buildPagination(data.length, page, 'renderContainers');
@@ -218,8 +227,8 @@ async function renderDocuments(page = 1) {
     <td style="font-size:11px;max-width:150px">${d.notes || '-'}</td>
     <td>
       ${d.filepath ? `<button class="btn btn-ghost btn-sm" title="View" onclick="openDocPreview('${API.resolveUrl(d.filepath).replace(/'/g, "\\'")}', '${d.type.replace(/'/g, "\\'")}', '${d.id.replace(/'/g, "\\'")}')">👁</button>` : `<button class="btn btn-ghost btn-sm" title="Tidak ada file" disabled style="opacity:0.5">👁</button>`}
+      ${d.filepath ? `<a href="${API.resolveUrl(d.filepath)}" target="_blank" class="btn btn-ghost btn-sm" title="Download">📥</a>` : ''}
       <button class="btn btn-ghost btn-sm" title="Edit/Update" onclick="openEditDoc('${d.id}')">✏️</button>
-      <button class="btn btn-danger btn-sm" title="Delete" onclick="deleteDocument('${d.id}')">🗑</button>
     </td></tr>
   `).join('') || '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--gray)">Belum ada dokumen</td></tr>';
   document.getElementById('pg-document').innerHTML = buildPagination(filtered.length, page, 'renderDocuments');
@@ -233,6 +242,7 @@ async function openAddContainer() {
   editCtrId = null;
   document.getElementById('f_id').readOnly = false;
   document.getElementById('modalContainerTitle').textContent = 'Tambah Kontainer';
+  document.getElementById('btnSaveContainer').textContent = '🚀 Daftarkan Kontainer';
 
   const now = new Date();
   const ymd = now.getFullYear() + String(now.getMonth() + 1).padStart(2, '0') + String(now.getDate()).padStart(2, '0');
@@ -273,10 +283,11 @@ async function saveContainer() {
     };
     if (editCtrId) {
       data.id = editCtrId;
-      const res = await API.updateContainer(editCtrId, data);
+      const res = await API.updateContainer(data);
       if (res.error) { alert(res.error); return; }
       closeModal('modalContainer');
       await renderContainers();
+      await renderDashboard(); // Update notifications and stats
       showSuccessModal('Kontainer berhasil diupdate!');
     } else {
       data.status = 'booking';
@@ -284,6 +295,7 @@ async function saveContainer() {
       if (res.error) { alert(res.error); return; }
       closeModal('modalContainer');
       await renderContainers();
+      await renderDashboard(); // Update notifications and stats
       showSuccessModal('Kontainer berhasil didaftarkan!');
     }
   } finally {
@@ -295,6 +307,7 @@ async function openEditContainer(id) {
   const c = await API.getContainer(id);
   editCtrId = id;
   document.getElementById('modalContainerTitle').textContent = 'Edit Kontainer';
+  document.getElementById('btnSaveContainer').textContent = '💾 Simpan Perubahan';
   document.getElementById('f_id').value = c.id;
   document.getElementById('f_id').readOnly = true;
   document.getElementById('f_booking').value = c.booking_no;
@@ -319,8 +332,14 @@ function showSuccessModal(msg) {
 
 async function openUploadDoc() {
   const ctrs = await API.getContainers();
+  editDocId = null;
+  document.getElementById('modalUploadTitle').textContent = 'Upload Dokumen';
+  document.getElementById('btnSaveDoc').textContent = 'Submit ke Operator';
   document.getElementById('docContainer').innerHTML = ctrs.map(c => `<option value="${c.id}">${c.id} — ${c.vessel}</option>`).join('');
+  document.getElementById('docContainer').disabled = false;
+  document.getElementById('docContainer').style.opacity = '1';
   document.getElementById('docNotes').value = '';
+  document.getElementById('docFile').value = '';
   document.getElementById('modalUpload').classList.add('open');
 }
 
@@ -330,6 +349,7 @@ async function saveDoc() {
   isSavingDoc = true;
   try {
     const formData = new FormData();
+    if (editDocId) formData.append('id', editDocId);
     formData.append('container_id', document.getElementById('docContainer').value);
     formData.append('type', document.getElementById('docType').value);
     formData.append('notes', document.getElementById('docNotes').value);
@@ -341,7 +361,8 @@ async function saveDoc() {
     if (data.error) { alert(data.error); return; }
     closeModal('modalUpload');
     await renderDocuments();
-    showSuccessModal('Dokumen berhasil diupload!');
+    await renderDashboard(); // Update notifications
+    showSuccessModal(editDocId ? 'Dokumen berhasil diupdate!' : 'Dokumen berhasil diupload!');
   } finally {
     isSavingDoc = false;
   }
@@ -399,73 +420,27 @@ async function downloadDocExcel() {
   XLSX.writeFile(wb, `Laporan_Dokumen_CMS_${filterLabel}.xlsx`);
 }
 
-async function deleteContainer(id) {
-  if (!confirm(`Hapus kontainer ${id}?`)) return;
-  const res = await API.deleteContainer(id);
-  if (res.error) { alert(res.error); return; }
-  await renderContainers();
-  alert(`🗑️ Kontainer ${id} berhasil dihapus`);
-}
 
-async function deleteDocument(id) {
-  if (!confirm(`Hapus dokumen ${id}?`)) return;
-  const res = await API.deleteDocument(id);
-  if (res.error) { alert(res.error); return; }
-  await renderDocuments();
-  alert(`🗑️ Dokumen ${id} berhasil dihapus`);
-}
 
-function openEditContainer(id) {
-  alert('Edit Kontainer belum diimplementasikan di mockup ini');
-}
 
-let editDocId = null;
 
 async function openEditDoc(id) {
   const doc = _allDocData.find(d => d.id === id);
   if (!doc) { alert('Dokumen tidak ditemukan'); return; }
 
   editDocId = id;
-  document.getElementById('editDocContainer').innerHTML = `<option value="${doc.container_id}">${doc.container_id}</option>`;
-  document.getElementById('editDocType').value = doc.type;
-  document.getElementById('editDocNotes').value = doc.notes || '';
-  document.getElementById('editDocFile').value = '';
+  document.getElementById('modalUploadTitle').textContent = 'Edit Dokumen';
+  document.getElementById('btnSaveDoc').textContent = '💾 Simpan Perubahan';
+  
+  document.getElementById('docContainer').innerHTML = `<option value="${doc.container_id}">${doc.container_id}</option>`;
+  document.getElementById('docContainer').disabled = true;
+  document.getElementById('docContainer').style.opacity = '0.7';
+  
+  document.getElementById('docType').value = doc.type;
+  document.getElementById('docNotes').value = doc.notes || '';
+  document.getElementById('docFile').value = '';
 
-  document.getElementById('modalEditDoc').classList.add('open');
-}
-
-let isSubmittingEditDoc = false;
-async function submitEditDoc() {
-  if (isSubmittingEditDoc) return;
-  isSubmittingEditDoc = true;
-  try {
-    const doc = _allDocData.find(d => d.id === editDocId);
-    if (!doc) return;
-
-    const formData = new FormData();
-    formData.append('id', editDocId);
-    formData.append('container_id', doc.container_id);
-    formData.append('type', document.getElementById('editDocType').value);
-    formData.append('notes', document.getElementById('editDocNotes').value);
-
-    const fileInput = document.getElementById('editDocFile');
-    if (fileInput.files[0]) {
-      formData.append('file', fileInput.files[0]);
-    }
-
-    const res = await fetch(API.base + '/documents.php', { method: 'POST', credentials: 'include', body: formData });
-    const data = await res.json();
-
-    if (data.error) { alert(data.error); return; }
-
-    closeModal('modalEditDoc');
-    await renderDocuments();
-    showSuccessModal('Dokumen berhasil diupdate!');
-  } catch (err) {
-    alert('Terjadi kesalahan jaringan');
-  } finally {
-    isSubmittingEditDoc = false;
-  }
+  document.getElementById('modalUpload').classList.add('open');
 }
 
 window.openDocPreview = function (filepath, type, id) {
@@ -487,3 +462,48 @@ window.openDocPreview = function (filepath, type, id) {
   document.getElementById('previewDownloadBtn').href = filepath;
   document.getElementById('modalDocPreview').classList.add('open');
 };
+async function renderNotifications(page = 1) {
+  const data = await API.getNotifications();
+  const notifs = data.notifications || [];
+  const start = (page - 1) * ITEMS_PER_PAGE;
+  const sliced = notifs.slice(start, start + ITEMS_PER_PAGE);
+
+  const unreadCount = notifs.filter(n => !n.is_read).length;
+  const countEl = document.getElementById('unreadCount');
+  if (countEl) countEl.textContent = unreadCount > 0 ? `(${unreadCount} Baru)` : '';
+
+  document.getElementById('notifList').innerHTML = sliced.map(n => `
+    <div class="notif-item ${n.is_read ? '' : 'unread'}" onclick="handleNotifClick('${n.id}', '${n.container_id}')">
+      <div class="notif-dot" style="background:${(STATUS_CONFIG[n.type] || {}).color || '#64748b'}"></div>
+      <div style="flex:1">
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+          <span style="font-size:13px;font-weight:600;color:var(--white)">${n.container_id || 'Sistem'}</span>
+          <span style="font-size:10px;color:var(--gray)">${formatDateTime(n.created_at)}</span>
+        </div>
+        <div style="font-size:12px;color:var(--text);line-height:1.4">${n.message}</div>
+      </div>
+    </div>
+  `).join('') || '<div style="text-align:center;padding:40px;color:var(--gray)">Tidak ada notifikasi</div>';
+
+  document.getElementById('pg-notif').innerHTML = buildPagination(notifs.length, page, 'renderNotifications');
+}
+
+async function handleNotifClick(id, containerId) {
+  await API.markRead(id);
+  await renderDashboard();
+  if (containerId) {
+    viewDetail(containerId);
+  }
+  if (document.getElementById('sec-notifications').classList.contains('active')) {
+    renderNotifications();
+  }
+}
+
+async function markAllRead() {
+  await API.markRead('all');
+  await renderDashboard();
+  if (document.getElementById('sec-notifications').classList.contains('active')) {
+    renderNotifications();
+  }
+  showSuccessModal('Semua notifikasi ditandai telah dibaca');
+}

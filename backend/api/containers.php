@@ -138,6 +138,10 @@ switch ($method) {
         $pdo->prepare("INSERT INTO notifications (id,user_id,container_id,message,type) VALUES (?,?,?,?,?)")
             ->execute([genId('NTF'), 1, $id, "Kontainer baru terdaftar: $id", 'info']);
 
+        // Notif stakeholder (pemilik)
+        $pdo->prepare("INSERT INTO notifications (id,user_id,container_id,message,type) VALUES (?,?,?,?,?)")
+            ->execute([genId('NTF'), $user['id'], $id, "Anda telah mendaftarkan kontainer baru: $id", 'success']);
+
         jsonResponse(['success' => true, 'id' => $id]);
         break;
 

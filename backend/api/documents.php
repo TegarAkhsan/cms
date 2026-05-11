@@ -127,6 +127,12 @@ switch ($method) {
                 ->execute([genId('NTF'), $container['owner_id'], $container_id, "Dokumen ($type) telah diupload untuk $container_id", 'info']);
         }
 
+        // Notif stakeholder (pemilik)
+        if ($user['role'] === 'stakeholder') {
+            $pdo->prepare("INSERT INTO notifications (id,user_id,container_id,message,type) VALUES (?,?,?,?,?)")
+                ->execute([genId('NTF'), $user['id'], $container_id, "Anda telah mengupload dokumen baru ($type) untuk kontainer $container_id", 'success']);
+        }
+
         $pdo->prepare("INSERT INTO events (id,container_id,event,actor,note) VALUES (?,?,?,?,?)")
             ->execute([genId('EVT'), $container_id, 'Dokumen Diupload', ucfirst($user['role']).': '.$user['name'], "Tipe: $type"]);
 
