@@ -23,9 +23,9 @@ function buildPagination(total, page, callbackName) {
   html += `<button class="btn btn-sm btn-ghost" onclick="${callbackName}(${page + 1})" ${page === pages ? 'disabled' : ''}>&raquo;</button>`;
   return html;
 }
-const PAGE_TITLES = { dashboard: ['Dashboard Operator', 'CMS › Dashboard'], containers: ['Manajemen Kontainer', 'CMS › Kontainer'], documents: ['Dokumen', 'CMS › Dokumen'], yard: ['Yard Map', 'CMS › Yard'], tracking: ['Live Tracking', 'CMS › Tracking'] };
+const PAGE_TITLES = { dashboard: ['Dashboard Operator', 'CMS › Dashboard'], containers: ['Manajemen Kontainer', 'CMS › Kontainer'], documents: ['Dokumen', 'CMS › Dokumen'], yard: ['Yard Map', 'CMS › Yard'], tracking: ['Live Tracking', 'CMS › Tracking'], notifications: ['Notifikasi', 'CMS › Notifikasi'] };
 
-async function showSection(name) {
+window.showSection = async function(name) {
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('sec-' + name).classList.add('active');
@@ -36,6 +36,7 @@ async function showSection(name) {
   if (name === 'documents') await renderDocuments();
   if (name === 'yard') renderYard();
   if (name === 'tracking') await renderTracking();
+  if (name === 'notifications') await renderNotifications();
 }
 
 async function renderDashboard() {
@@ -256,7 +257,7 @@ async function renderYard() {
 
   // Map containers into their respective blocks dynamically
   res.forEach(c => {
-    if (c.status !== 'completed' && c.status !== 'delivery' && c.position_desc) {
+    if (c.status !== 'completed' && c.status !== 'delivery' && c.status !== 'ship_departure' && c.position_desc) {
       const blockMatch = RegExp('Yard ([A-C][1-6])').exec(c.position_desc);
       if (blockMatch && blockMatch[1]) {
         const b = blockMatch[1];
@@ -428,10 +429,73 @@ async function viewDetail(id) {
   document.getElementById('modalDetail').classList.add('open');
 }
 
-async function updateBadges() {
+window.updateBadges = async function() {
   const stats = await API.getStats();
   document.getElementById('nbCtr').textContent = stats.by_status?.clearance || 0;
   document.getElementById('nbDoc').textContent = stats.pending_docs;
+  document.getElementById('nbNotif').textContent = stats.unread_notifs || 0;
+}
+
+window.renderNotifications = async function(page = 1) {
+  const listEl = document.getElementById('notifList');
+  if (!listEl) return;
+
+  const searchEl = document.getElementById('notifSearch');
+  const filterEl = document.getElementById('notifFilterType');
+  const search = searchEl ? searchEl.value : '';
+  const typeFilter = filterEl ? filterEl.value : '';
+  
+  const data = await API.getNotifications({ search, type: typeFilter });
+  if (!data || data.error) {
+    listEl.innerHTML = `<div style="text-align:center;padding:40px;color:var(--red)">${data?.error || 'Gagal mengambil notifikasi'}</div>`;
+    return;
+  }
+
+  const notifs = data.notifications || [];
+  const start = (page - 1) * ITEMS_PER_PAGE;
+  const sliced = notifs.slice(start, start + ITEMS_PER_PAGE);
+
+  if (sliced.length === 0) {
+    listEl.innerHTML = '<div style="text-align:center;padding:40px;color:var(--gray)">Tidak ada notifikasi</div>';
+    document.getElementById('pg-notif').innerHTML = '';
+    return;
+  }
+
+  listEl.innerHTML = sliced.map(n => {
+    const isUnread = n.is_read == 0 || n.is_read === false;
+    let dotColor = 'var(--cyan)';
+    if (n.type === 'success') dotColor = 'var(--green)';
+    else if (n.type === 'danger') dotColor = 'var(--red)';
+    else if (n.type === 'warning') dotColor = 'var(--gold)';
+
+    return `
+      <div class="notif-item ${isUnread ? 'unread' : ''}" onclick="markRead('${n.id}')">
+        <div class="notif-dot" style="background:${dotColor}"></div>
+        <div style="flex:1">
+          <div style="display:flex;justify-content:space-between">
+            <span style="font-size:12px;font-weight:600;color:var(--white)">${n.container_id || 'Sistem'}</span>
+            <span style="font-size:10px;color:var(--gray)">${formatDateTime(n.created_at)}</span>
+          </div>
+          <div style="font-size:12px;color:var(--text);margin-top:4px">${n.message}</div>
+          <div style="font-size:10px;color:var(--gray);margin-top:4px">📦 ${n.vessel || '-'} · 🏷️ ${n.commodity || '-'}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  document.getElementById('pg-notif').innerHTML = buildPagination(notifs.length, page, 'renderNotifications');
+}
+
+window.markRead = async function(id) {
+  await API.markRead(id);
+  await renderNotifications();
+  await updateBadges();
+}
+
+window.markAllRead = async function() {
+  await API.markRead('all');
+  await renderNotifications();
+  await updateBadges();
 }
 
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }

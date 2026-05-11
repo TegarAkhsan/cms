@@ -216,6 +216,12 @@ switch ($method) {
             }
         }
 
+        // Jika status kontainer menjadi 'completed', otomatis set semua dokumen terkait menjadi 'approved'
+        if ($newStatus === 'completed') {
+            $pdo->prepare("UPDATE documents SET status = 'approved', notes = 'Otomatis disetujui karena kontainer selesai' WHERE container_id = ? AND status != 'approved'")
+                ->execute([$id]);
+        }
+
         jsonResponse(['success' => true]);
         break;
 

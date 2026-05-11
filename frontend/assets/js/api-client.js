@@ -52,8 +52,8 @@ const API = {
     deleteDocument: (id)     => API.call('documents.php', 'DELETE', { id }),
 
     // Notifications
-    getNotifications: ()           => API.call('notifications.php'),
-    markRead:         (id = 'all') => API.call('notifications.php', 'PUT', { id }),
+    getNotifications: (p = {})      => API.call('notifications.php', 'GET', p),
+    markRead:         (id = 'all')  => API.call('notifications.php', 'PUT', { id }),
 
     // Stats
     getStats: () => API.call('stats.php'),

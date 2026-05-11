@@ -658,3 +658,33 @@ body {
   padding: 5px;
   text-align: center;
 }
+/* NOTIFICATIONS */
+.notif-item {
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  background: rgba(255, 255, 255, .03);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: all .2s;
+}
+
+.notif-item:hover {
+  background: rgba(255, 255, 255, .06);
+  transform: translateX(4px);
+}
+
+.notif-item.unread {
+  border-color: rgba(34, 211, 238, .2);
+  background: rgba(34, 211, 238, .04);
+}
+
+.notif-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-top: 4px;
+  flex-shrink: 0;
+}

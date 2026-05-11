@@ -33,6 +33,7 @@
           id="nbDoc">0</span></button>
       <button class="nav-item" onclick="showSection('yard')"><span class="ni">🏭</span> Yard Map</button>
       <button class="nav-item" onclick="showSection('tracking')"><span class="ni">🗺️</span> Live Tracking</button>
+      <button class="nav-item" onclick="showSection('notifications')"><span class="ni">🔔</span> Notifikasi <span class="nb" id="nbNotif">0</span></button>
     </nav>
     <div class="sidebar-footer">
       <div class="user-card">
@@ -176,6 +177,24 @@
             <div class="box-title">On Delivery</div>
             <div id="deliveryList"></div>
           </div>
+        </div>
+      </div>
+
+      <div class="section" id="sec-notifications">
+        <div class="filter-bar">
+          <input class="search-input" id="notifSearch" placeholder="🔍 Cari Notif (ID, Vessel, Komoditi)..."
+            oninput="renderNotifications(1)" style="width:300px">
+          <label>Filter:</label>
+          <select id="notifFilterType" onchange="renderNotifications(1)">
+            <option value="">Semua Notif</option>
+            <option value="Kontainer">Kontainer</option>
+            <option value="Dokumen">Dokumen</option>
+          </select>
+          <button class="btn btn-ghost" onclick="markAllRead()" style="margin-left:auto">Tandai Semua Dibaca</button>
+        </div>
+        <div class="box">
+          <div id="notifList"></div>
+          <div class="pagination" id="pg-notif"></div>
         </div>
       </div>
 
