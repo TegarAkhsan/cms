@@ -1,7 +1,9 @@
 :root {
   --bg: #f3f4f6;
   --bg2: #ffffff;
-  --sidebar: #ffffff;
+  --sidebar: #1e40af;
+  --sidebar-text: #ffffff;
+  --sidebar-text-muted: #93c5fd;
   --card: #ffffff;
   --border: #e5e7eb;
   --blue: #2563eb;
@@ -56,13 +58,13 @@ body {
 .brand {
   font-size: 20px;
   font-weight: 800;
-  color: var(--white);
+  color: var(--sidebar-text);
   letter-spacing: -0.5px;
 }
 
 .sub-role {
   font-size: 11px;
-  color: var(--gray);
+  color: var(--sidebar-text-muted);
   opacity: 0.7;
 }
 
@@ -73,7 +75,7 @@ body {
 
 .nav-section {
   font-size: 10px;
-  color: var(--gray);
+  color: var(--sidebar-text-muted);
   text-transform: uppercase;
   letter-spacing: 1.5px;
   font-weight: 700;
@@ -91,7 +93,7 @@ body {
   transition: all .2s;
   font-size: 14px;
   font-weight: 600;
-  color: #4b5563;
+  color: rgba(255, 255, 255, 0.8);
   margin-bottom: 4px;
   border: none;
   background: none;
@@ -100,13 +102,13 @@ body {
 }
 
 .nav-item:hover {
-  background: #f3f4f6;
-  color: var(--blue);
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
 }
 
 .nav-item.active {
-  background: #eff6ff;
-  color: var(--blue);
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
   box-shadow: none;
 }
 
@@ -134,7 +136,8 @@ body {
   align-items: center;
   gap: 12px;
   padding: 12px;
-  background: #f9fafb;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 16px;
 }
 
@@ -154,27 +157,34 @@ body {
 .user-name {
   font-size: 13px;
   font-weight: 700;
-  color: var(--white);
+  color: var(--sidebar-text);
 }
 
 .user-role {
   font-size: 11px;
-  color: var(--gray);
+  color: var(--sidebar-text-muted);
 }
 
 .logout-btn {
   margin-left: auto;
-  background: none;
+  background: rgba(239, 68, 68, 0.2);
   border: none;
+  border-radius: 8px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  color: var(--gray);
-  font-size: 18px;
+  color: #fca5a5;
+  font-size: 16px;
   transition: .2s;
 }
 
 .logout-btn:hover {
-  color: var(--red);
-  transform: scale(1.1);
+  background: var(--red);
+  color: white;
+  transform: scale(1.05);
 }
 
 .main {

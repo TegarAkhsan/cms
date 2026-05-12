@@ -1,7 +1,9 @@
 :root {
   --bg: #f3f4f6;
   --bg2: #ffffff;
-  --sidebar: #ffffff;
+  --sidebar: #1e40af;
+  --sidebar-text: #ffffff;
+  --sidebar-text-muted: #93c5fd;
   --card: #ffffff;
   --border: #e5e7eb;
   --green: #10b981;
@@ -67,12 +69,12 @@ body {
 .brand {
   font-size: 16px;
   font-weight: 700;
-  color: var(--white);
+  color: var(--sidebar-text);
 }
 
 .sub-role {
   font-size: 10px;
-  color: var(--gray);
+  color: var(--sidebar-text-muted);
 }
 
 .sidebar-nav {
@@ -82,7 +84,7 @@ body {
 
 .nav-section {
   font-size: 10px;
-  color: var(--gray);
+  color: var(--sidebar-text-muted);
   text-transform: uppercase;
   letter-spacing: 1px;
   font-weight: 600;
@@ -98,7 +100,7 @@ body {
   cursor: pointer;
   transition: all .2s;
   font-size: 13px;
-  color: var(--light);
+  color: rgba(255, 255, 255, 0.8);
   margin-bottom: 2px;
   border: none;
   background: none;
@@ -107,14 +109,14 @@ body {
 }
 
 .nav-item:hover {
-  background: rgba(255, 255, 255, .05);
-  color: var(--white);
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
 }
 
 .nav-item.active {
-  background: rgba(16, 185, 129, .15);
-  color: var(--cyan);
-  border: 1px solid rgba(34, 211, 238, .15);
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, .15);
 }
 
 .nav-item .ni {
@@ -143,8 +145,9 @@ body {
   align-items: center;
   gap: 10px;
   padding: 10px;
-  background: rgba(255, 255, 255, .04);
-  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
 }
 
 .user-avatar {
@@ -163,7 +166,7 @@ body {
 .user-name {
   font-size: 12px;
   font-weight: 600;
-  color: var(--white);
+  color: var(--sidebar-text);
 }
 
 .user-role {
@@ -173,15 +176,23 @@ body {
 
 .logout-btn {
   margin-left: auto;
-  background: none;
+  background: rgba(239, 68, 68, 0.2);
   border: none;
+  border-radius: 6px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  color: var(--gray);
-  font-size: 16px;
+  color: #fca5a5;
+  font-size: 14px;
+  transition: .2s;
 }
 
 .logout-btn:hover {
-  color: var(--red);
+  background: var(--red);
+  color: white;
 }
 
 .main {
@@ -383,7 +394,7 @@ body {
 
 .btn-ghost {
   background: rgba(255, 255, 255, .06);
-  color: var(--light);
+  color: rgba(255, 255, 255, 0.8);
   border: 1px solid var(--border);
 }
 
